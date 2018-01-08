@@ -5,14 +5,21 @@ import (
 )
 
 type Config struct {
-	switchName  string
-	switchHost  string
-    switchPort  string
-    senzieMode  string
-    senzieName  string
-    dotKeys     string
-    idRsa       string
-    idRsaPub    string
+	switchName      string
+	switchHost      string
+    switchPort      string
+    senzieMode      string
+    senzieName      string
+    dotKeys         string
+    idRsa           string
+    idRsaPub        string
+}
+
+type CassandraConfig struct {
+    host        string
+    port        string
+    keyspace    string
+    consistancy string
 }
 
 var config = Config {
@@ -24,6 +31,13 @@ var config = Config {
     dotKeys: getEnv("DOT_KEYS", ".keys"),
     idRsa: getEnv("ID_RSA", ".keys/id_rsa"),
     idRsaPub: getEnv("ID_RSA_PUB", ".keys/id_rsa.pub"),
+}
+
+var cassandraConfig = CassandraConfig {
+    host: getEnv("CASSANDRA_HOST", "dev.localhost"),
+    port: getEnv("CASSANDRA_PORT", "9042"),
+    keyspace: getEnv("CASSANDRA_KEYSPACE", "cchain"),
+    consistancy: getEnv("CASSANDRA_CONSISTANCY", "ALL"),
 }
 
 func getEnv(key, fallback string) string {

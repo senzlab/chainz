@@ -34,6 +34,9 @@ func main() {
     // first init key pair
     setUpKeys()
 
+    // init cassandra session
+    initCStar()
+
     // address
     tcpAddr, err := net.ResolveTCPAddr("tcp4", config.switchHost + ":" + config.switchPort)
     if err != nil {
