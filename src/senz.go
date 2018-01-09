@@ -5,9 +5,6 @@ import (
     "net"
     "bufio"
     "os"
-    "strings"
-    "strconv"
-    "time"
 )
 
 type Senzie struct {
@@ -35,38 +32,54 @@ func main() {
     setUpKeys()
 
     // init cassandra session
-    initCStar()
+    initCStarSession()
+
+    // init trans
+    trans := &Trans{}
+    trans.BankId = "sampath"
+    trans.ChequeBankId = "sampath"
+    trans.ChequeAmount = 1000
+    trans.ChequeDate = "12/01/2018"
+    trans.FromAcc = "111111"
+    trans.ToAcc = "222222"
+    trans.Digsig = "DIGISIG"
+    trans.Status = "PENDING"
+    createTrans(trans)
+    println(isDoubleSpend("111111", "222222", "768be756-f51f-11e7-a0f7-4c327597ce77"))
 
     // address
-    tcpAddr, err := net.ResolveTCPAddr("tcp4", config.switchHost + ":" + config.switchPort)
-    if err != nil {
-        fmt.Println("Error address:", err.Error())
-        os.Exit(1)
-    }
+    //tcpAddr, err := net.ResolveTCPAddr("tcp4", config.switchHost + ":" + config.switchPort)
+    //if err != nil {
+    //    fmt.Println("Error address:", err.Error())
+    //    os.Exit(1)
+    //}
 
     // tcp connect
-    conn, err := net.DialTCP("tcp", nil, tcpAddr)
-    if err != nil {
-        fmt.Println("Error listening:", err.Error())
-        os.Exit(1)
-    }
+    //conn, err := net.DialTCP("tcp", nil, tcpAddr)
+    //if err != nil {
+    //    fmt.Println("Error listening:", err.Error())
+    //    os.Exit(1)
+    //}
 
     // close on app closes
-    defer conn.Close()
+    //defer conn.Close()
 
-    fmt.Println("connected to switch")
+    //fmt.Println("connected to switch")
 
     // create senzie
-    senzie := &Senzie {
-        name: config.senzieName,
-        out: make(chan Senz),
-        quit: make(chan bool),
-        tik: make(chan string),
-        reader: bufio.NewReader(conn),
-        writer: bufio.NewWriter(conn),
-        conn: conn,
-    }
-    registering(senzie)
+    //senzie := &Senzie {
+    //    name: config.senzieName,
+    //    out: make(chan Senz),
+    //    quit: make(chan bool),
+    //    tik: make(chan string),
+    //    reader: bufio.NewReader(conn),
+    //    writer: bufio.NewWriter(conn),
+    //    conn: conn,
+    //}
+    //registering(senzie)
+
+    // close session
+    clearCStarSession()
 }
 
 func registering(senzie *Senzie) {
@@ -174,63 +187,54 @@ func handling(senzie *Senzie, senz *Senz) {
     senzie.out <- sz
 
     if(senz.Ztype == "SHARE") {
-            
-    } else if(senz.Ztype == "PUT") {
-        
-    }
-}
+        // we only handle share cheques
+        // get cheque attributes
+        bId := config.senzieName
+        cBnkId := senz.Attr["cbank"]
+        cId := senz.Attr["cid"]
+        //cAmnt := senz.Attr["camnt"]
+        cDate := senz.Attr["cdate"]
+        cImg := senz.Attr["cimg"]
+        toAcc := senz.Attr["to"]
+        fromAcc := senz.Sender
+        digsig := senz.Digsig
 
+        if (len(cId) == 0) {
+            // this means new cheque
+            // create cheque
+            cheque := &Cheque{}
+            cheque.BankId = bId;
+            cheque.Id = uuid()
+            cheque.Amount = 1000
+            cheque.Date = cDate
+            cheque.Img = cImg
+            createCheque(cheque)
 
-func parse(msg string)Senz {
-    fMsg := formatToParse(msg)
-    tokens := strings.Split(fMsg, " ")
-    senz := Senz {}
-    senz.Msg = fMsg
-    senz.Attr = map[string]string{}
+            // create trans
+            trans := &Trans{}
+            trans.BankId = bId
+            trans.Id = uuid()
+            trans.ChequeBankId = cBnkId
+            trans.ChequeId = cheque.Id
+            trans.ChequeAmount = 1000
+            trans.ChequeDate = cDate
+            trans.ChequeImg = cImg
+            trans.FromAcc = fromAcc
+            trans.ToAcc = toAcc
+            trans.Digsig = digsig
+            trans.Status = "TRANSFER"
+            createTrans(trans)
 
-    for i := 0; i < len(tokens); i++ {
-        if(i == 0) {
-            senz.Ztype = tokens[i]
-        } else if(i == len(tokens) - 1) {
-            // signature at the end
-            senz.Digsig = tokens[i]
-        } else if(strings.HasPrefix(tokens[i], "@")) {
-            // receiver @eranga
-            senz.Receiver = tokens[i][1:]
-        } else if(strings.HasPrefix(tokens[i], "^")) {
-            // sender ^lakmal
-            senz.Sender = tokens[i][1:]
-        } else if(strings.HasPrefix(tokens[i], "$")) {
-            // $key er2232
-            key := tokens[i][1:]
-            val := tokens[i + 1]
-            senz.Attr[key] = val
-            i ++
-        } else if(strings.HasPrefix(tokens[i], "#")) {
-            key := tokens[i][1:]
-            nxt := tokens[i + 1]
-
-            if(strings.HasPrefix(nxt, "#") || strings.HasPrefix(nxt, "$") ||
-                                                strings.HasPrefix(nxt, "@")) {
-                // #lat #lon
-                // #lat @eranga
-                // #lat $key 32eewew
-                senz.Attr[key] = ""
+            // TODO forward cheque to toAcc
+            // TODO send status back to fromAcc
+        } else {
+            // this mean already transfered cheque
+            // check for double spend
+            if(isDoubleSpend(fromAcc, toAcc, cId)) {
+                // TODO send error status back
             } else {
-                // #lat 3.2323 #lon 5.3434
-                senz.Attr[key] = nxt
-                i ++
+                // TODO create trans 
             }
         }
     }
-
-    // set uid as the senz id
-    senz.Uid = senz.Attr["uid"]
-
-    return senz
-}
-
-func uid()string {
-    t := time.Now().UnixNano() / int64(time.Millisecond)
-    return config.senzieName + strconv.FormatInt(t, 10)
 }

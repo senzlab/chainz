@@ -1,26 +1,53 @@
 package main
 
 import (
-    "fmt"
     "os"
     "strconv"
+
 	"github.com/gocql/gocql"
 )
 
+type Trans struct {
+    BankId          string
+    Id              gocql.UUID
+    ChequeBankId    string
+    ChequeId        gocql.UUID
+    ChequeAmount    int
+    ChequeDate      string
+    ChequeImg       string
+    FromAcc         string
+    ToAcc           string
+    Timestamp       int64
+    Digsig          string
+    Status          string
+}
+
+type Cheque struct {
+    BankId          string
+    Id              gocql.UUID
+    Amount          int
+    Date            string
+    Img             string
+}
+
 var Session *gocql.Session
 
-func initCStar() {
+func initCStarSession() {
     cluster := gocql.NewCluster(cassandraConfig.host)
     cluster.Port = port(cassandraConfig.port)
 	cluster.Keyspace = cassandraConfig.keyspace
 	cluster.Consistency = consistancy(cassandraConfig.consistancy)
 
-    Session, err := cluster.CreateSession()
-    if err != nil {
-        fmt.Println("Error connecting to cassandra:", err.Error())
+    s, err := cluster.CreateSession()
+    if(err != nil) {
+        println("Error cassandra session:", err.Error())
         os.Exit(1)
     }
-	defer Session.Close()
+    Session = s
+}
+
+func clearCStarSession() {
+    Session.Close()
 }
 
 func port(p string) int {
@@ -41,4 +68,88 @@ func consistancy(c string) gocql.Consistency {
     return gc
 }
 
+func createTrans(trans *Trans) error {
+    q := `
+        INSERT INTO trans (
+            bank_id,
+            id,
+            cheque_bank_id,
+            cheque_id,
+            cheque_amount,
+            cheque_date,
+            cheque_img,
+            from_acc,
+            to_acc,
+            timestamp,
+            digsig,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `
+    err := Session.Query(q, trans.BankId, trans.Id, trans.ChequeBankId, trans.ChequeId, trans.ChequeAmount, trans.ChequeDate, trans.ChequeImg, trans.FromAcc, trans.ToAcc, trans.Timestamp, trans.Digsig, trans.Status).Exec()
+    if err != nil {
+        println(err.Error())
+    }
 
+    return err
+}
+
+func createCheque(cheque *Cheque) error {
+    q := `
+        INSERT INTO cheques (
+            bank_id,
+            id,
+            amount,
+            date,
+            img
+        )
+        VALUES (?, ?, ?, ?, ?)
+    `
+    err := Session.Query(q, cheque.BankId, cheque.Id, cheque.Amount, cheque.Date, cheque.Img).Exec()
+
+    if err != nil {
+        println(err.Error())
+    }
+
+    return err
+}
+
+func isDoubleSpend(from string, to string, cid string)bool {
+    // parse cid and get uuid
+    uuid, err := gocql.ParseUUID(cid)
+    if err != nil {
+        println(err.Error)
+        return true
+    }
+
+    m := map[string]interface{}{}
+    q := `
+        SELECT id FROM trans
+            WHERE from_acc=?
+            AND cheque_id=?
+        LIMIT 1
+        ALLOW FILTERING
+    `
+    itr := Session.Query(q, from, uuid).Consistency(gocql.One).Iter()
+    for itr.MapScan(m) {
+        return true
+    }
+
+    q = `
+        SELECT id FROM trans
+            WHERE to_acc=?
+            AND cheque_id=?
+        LIMIT 1
+        ALLOW FILTERING
+    `
+    itr = Session.Query(q, to, uuid).Consistency(gocql.One).Iter()
+    for itr.MapScan(m) {
+        return true
+    }
+
+    return false
+}
+
+func uuid() gocql.UUID {
+    return gocql.TimeUUID()
+}
