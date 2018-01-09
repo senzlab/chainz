@@ -76,7 +76,7 @@ func timestamp() int64 {
 
 func senzToCheque(senz *Senz)*Cheque {
     cheque := &Cheque{}
-    cheque.BankId = senz.Attr["cbank"]
+    cheque.BankId = senz.Attr["cbnk"]
     cheque.Id = uuid()
     cheque.Amount = 1000
     cheque.Date = senz.Attr["cdate"]
@@ -89,12 +89,12 @@ func senzToTrans(senz *Senz)*Trans {
     trans := &Trans{}
     trans.BankId = config.senzieName 
     trans.Id = uuid()
-    trans.ChequeBankId = senz.Attr["cbank"] 
+    trans.ChequeBankId = senz.Attr["cbnk"] 
     trans.ChequeAmount = 1000
     trans.ChequeDate = senz.Attr["cdate"] 
     trans.ChequeImg = senz.Attr["cimg"] 
-    trans.FromAcc = senz.Sender 
-    trans.ToAcc = senz.Attr["to"] 
+    trans.FromAcc = senz.Sender
+    trans.ToAcc = senz.Attr["to"]
     trans.Digsig = senz.Digsig
 
     return trans
@@ -104,28 +104,37 @@ func regSenz()string {
     z := "SHARE #pubkey " + getIdRsaPubStr() +
                 " #uid " + uid() +
                 " @" + config.switchName +
-                " ^" + config.senzieName +
-                " digisig"
+                " ^" + config.senzieName
+    s, _ := sign(z, getIdRsa())
 
-    return z
+    return z + " " + s
 }
 
 func awaSenz(uid string)string {
     z := "AWA #uid " + uid +
               " @" + config.switchName +
-              " ^" + config.senzieName +
-              " digisig"
+              " ^" + config.senzieName
+    s, _ := sign(z, getIdRsa())
 
-    return z
+    return z + " " + s
 }
 
-func statusSenz() {
+func statusSenz(status string, uid string, cid string, cbnk string, to string)string {
+    z := "DATA #status " + status +
+                " #cid " + cid +
+                " #cbnk " + cbnk +
+                " #uid " + uid +
+                " @" + to +
+                " ^" + config.senzieName
+    s, _ := sign(z, getIdRsa())
 
+    return z + " " + s
 }
 
-func forwardChequeSenz(cheque *Cheque, from string, to string, uid string)string {
+func chequeSenz(cheque *Cheque, from string, to string, uid string)string {
     z := "SHARE #cbnk " + cheque.BankId +
                 " #cid " + cheque.Id.String() +
+                " #cbnk " + cheque.BankId +
                 " #camnt " + strconv.Itoa(cheque.Amount) +
                 " #cdate " + cheque.Date +
                 " #cimg " + cheque.Img +

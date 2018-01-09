@@ -163,7 +163,6 @@ func handling(senzie *Senzie, senz *Senz) {
             // this means new cheque
             // create cheque
             cheque := senzToCheque(senz)
-            cheque.Id = uuid()
             createCheque(cheque)
 
             // create trans
@@ -172,10 +171,11 @@ func handling(senzie *Senzie, senz *Senz) {
             trans.Status = "TRANSFER"
             createTrans(trans)
 
-            // TODO send status back to fromAcc
+            // send status back to fromAcc
+            senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], cheque.Id.String(), cheque.BankId, senz.Sender)
 
             // forward cheque to toAcc
-            senzie.out <- forwardChequeSenz(cheque, senz.Sender, senz.Attr["to"], uid())
+            senzie.out <- chequeSenz(cheque, senz.Sender, senz.Attr["to"], uid())
         } else {
             // this mean already transfered cheque
             // check for double spend
