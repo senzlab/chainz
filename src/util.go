@@ -73,3 +73,67 @@ func uid()string {
 func timestamp() int64 {
     return time.Now().UnixNano() / int64(time.Millisecond)
 }
+
+func senzToCheque(senz *Senz)*Cheque {
+    cheque := &Cheque{}
+    cheque.BankId = senz.Attr["cbank"]
+    cheque.Id = uuid()
+    cheque.Amount = 1000
+    cheque.Date = senz.Attr["cdate"]
+    cheque.Img = senz.Attr["cimg"]
+
+    return cheque
+}
+
+func senzToTrans(senz *Senz)*Trans {
+    trans := &Trans{}
+    trans.BankId = config.senzieName 
+    trans.Id = uuid()
+    trans.ChequeBankId = senz.Attr["cbank"] 
+    trans.ChequeAmount = 1000
+    trans.ChequeDate = senz.Attr["cdate"] 
+    trans.ChequeImg = senz.Attr["cimg"] 
+    trans.FromAcc = senz.Sender 
+    trans.ToAcc = senz.Attr["to"] 
+    trans.Digsig = senz.Digsig
+
+    return trans
+}
+
+func regSenz()string {
+    z := "SHARE #pubkey " + getIdRsaPubStr() +
+                " #uid " + uid() +
+                " @" + config.switchName +
+                " ^" + config.senzieName +
+                " digisig"
+
+    return z
+}
+
+func awaSenz(uid string)string {
+    z := "AWA #uid " + uid +
+              " @" + config.switchName +
+              " ^" + config.senzieName +
+              " digisig"
+
+    return z
+}
+
+func statusSenz() {
+
+}
+
+func forwardChequeSenz(cheque *Cheque, from string, to string, uid string)string {
+    z := "SHARE #cbnk " + cheque.BankId +
+                " #cid " + cheque.Id.String() +
+                " #camnt " + strconv.Itoa(cheque.Amount) +
+                " #cdate " + cheque.Date +
+                " #cimg " + cheque.Img +
+                " #from " + from +
+                " #uid " + uid +
+                " @" + to +
+                " ^" + config.senzieName
+    s, _ := sign(z, getIdRsa())
+
+    return z + " " + s
+}

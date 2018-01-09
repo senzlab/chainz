@@ -9,7 +9,7 @@ import (
 
 type Senzie struct {
     name        string
-	out         chan Senz
+	out         chan string
     quit        chan bool
     tik         chan string
     reader      *bufio.Reader
@@ -34,29 +34,6 @@ func main() {
     // init cassandra session
     initCStarSession()
 
-    // init cheque
-    cheque := &Cheque{}
-    cheque.BankId = "sampath"
-    cheque.Id = uuid()
-    cheque.Amount = 1000
-    cheque.Date = "12/08/2000"
-    createCheque(cheque)
-
-    // init trans
-    trans := &Trans{}
-    trans.BankId = "sampath"
-    trans.Id = uuid()
-    trans.ChequeBankId = "sampath"
-    trans.ChequeId = cheque.Id
-    trans.ChequeAmount = 1000
-    trans.ChequeDate = "12/01/2018"
-    trans.FromAcc = "111111"
-    trans.ToAcc = "222222"
-    trans.Digsig = "DIGISIG"
-    trans.Status = "PENDING"
-    createTrans(trans)
-    println(isDoubleSpend("111111", "222222", "768be756-f51f-11e7-a0f7-4c327597ce77"))
-
     // address
     tcpAddr, err := net.ResolveTCPAddr("tcp4", config.switchHost + ":" + config.switchPort)
     if err != nil {
@@ -79,7 +56,7 @@ func main() {
     // create senzie
     senzie := &Senzie {
         name: config.senzieName,
-        out: make(chan Senz),
+        out: make(chan string),
         quit: make(chan bool),
         tik: make(chan string),
         reader: bufio.NewReader(conn),
@@ -94,13 +71,7 @@ func main() {
 
 func registering(senzie *Senzie) {
     // send reg
-    uid := uid()
-    pubkey := getIdRsaPubStr() 
-    z := "SHARE #pubkey " + pubkey +
-                " #uid " + uid +
-                " @" + config.switchName +
-                " ^" + config.senzieName +
-                " digisig"
+    z := regSenz()
     senzie.writer.WriteString(z + ";")
     senzie.writer.Flush()
 
@@ -170,9 +141,9 @@ func writing(senzie *Senzie)  {
             break WRITER
         case senz := <-senzie.out:
             println("writing -- ")
-            println(senz.Msg)
-            // TODO sign and send
-            senzie.writer.WriteString(senz.Msg + ";")
+            println(senz)
+            // send
+            senzie.writer.WriteString(senz + ";")
             senzie.writer.Flush()
         case tik := <- senzie.tik:
             println("ticking -- " )
@@ -184,66 +155,38 @@ func writing(senzie *Senzie)  {
 
 func handling(senzie *Senzie, senz *Senz) {
     // frist send AWA back
-    uid := senz.Attr["uid"]
-    z := "AWA #uid " + uid + 
-              " @" + config.switchName +
-              " ^" + config.senzieName +
-              " digisig"
-    sz := Senz{}
-    sz.Uid = uid
-    sz.Msg = z
-    sz.Receiver = config.switchName
-    sz.Sender = config.senzieName
-    senzie.out <- sz
+    senzie.out <- awaSenz(senz.Attr["uid"])
 
     if(senz.Ztype == "SHARE") {
         // we only handle share cheques
-        // get cheque attributes
-        bId := config.senzieName
-        cBnkId := senz.Attr["cbank"]
-        cId := senz.Attr["cid"]
-        //cAmnt := senz.Attr["camnt"]
-        cDate := senz.Attr["cdate"]
-        cImg := senz.Attr["cimg"]
-        toAcc := senz.Attr["to"]
-        fromAcc := senz.Sender
-        digsig := senz.Digsig
-
-        if (len(cId) == 0) {
+        if cId, ok := senz.Attr["cid"]; !ok {
             // this means new cheque
             // create cheque
-            cheque := &Cheque{}
-            cheque.BankId = bId;
+            cheque := senzToCheque(senz)
             cheque.Id = uuid()
-            cheque.Amount = 1000
-            cheque.Date = cDate
-            cheque.Img = cImg
             createCheque(cheque)
 
             // create trans
-            trans := &Trans{}
-            trans.BankId = bId
-            trans.Id = uuid()
-            trans.ChequeBankId = cBnkId
+            trans := senzToTrans(senz)
             trans.ChequeId = cheque.Id
-            trans.ChequeAmount = 1000
-            trans.ChequeDate = cDate
-            trans.ChequeImg = cImg
-            trans.FromAcc = fromAcc
-            trans.ToAcc = toAcc
-            trans.Digsig = digsig
             trans.Status = "TRANSFER"
             createTrans(trans)
 
-            // TODO forward cheque to toAcc
             // TODO send status back to fromAcc
+
+            // forward cheque to toAcc
+            senzie.out <- forwardChequeSenz(cheque, senz.Sender, senz.Attr["to"], uid())
         } else {
             // this mean already transfered cheque
             // check for double spend
-            if(isDoubleSpend(fromAcc, toAcc, cId)) {
+            if(isDoubleSpend(senz.Sender, senz.Attr["to"], cId)) {
                 // TODO send error status back
             } else {
-                // TODO create trans 
+                // TODO create trans
+                trans := senzToTrans(senz)
+                // TODO trans.ChequeId = cId
+                trans.Status = "DEPOSIT"
+                createTrans(trans)
             }
         }
     }
