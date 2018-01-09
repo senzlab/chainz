@@ -34,10 +34,20 @@ func main() {
     // init cassandra session
     initCStarSession()
 
+    // init cheque
+    cheque := &Cheque{}
+    cheque.BankId = "sampath"
+    cheque.Id = uuid()
+    cheque.Amount = 1000
+    cheque.Date = "12/08/2000"
+    createCheque(cheque)
+
     // init trans
     trans := &Trans{}
     trans.BankId = "sampath"
+    trans.Id = uuid()
     trans.ChequeBankId = "sampath"
+    trans.ChequeId = cheque.Id
     trans.ChequeAmount = 1000
     trans.ChequeDate = "12/01/2018"
     trans.FromAcc = "111111"
@@ -48,35 +58,35 @@ func main() {
     println(isDoubleSpend("111111", "222222", "768be756-f51f-11e7-a0f7-4c327597ce77"))
 
     // address
-    //tcpAddr, err := net.ResolveTCPAddr("tcp4", config.switchHost + ":" + config.switchPort)
-    //if err != nil {
-    //    fmt.Println("Error address:", err.Error())
-    //    os.Exit(1)
-    //}
+    tcpAddr, err := net.ResolveTCPAddr("tcp4", config.switchHost + ":" + config.switchPort)
+    if err != nil {
+        fmt.Println("Error address:", err.Error())
+        os.Exit(1)
+    }
 
     // tcp connect
-    //conn, err := net.DialTCP("tcp", nil, tcpAddr)
-    //if err != nil {
-    //    fmt.Println("Error listening:", err.Error())
-    //    os.Exit(1)
-    //}
+    conn, err := net.DialTCP("tcp", nil, tcpAddr)
+    if err != nil {
+        fmt.Println("Error listening:", err.Error())
+        os.Exit(1)
+    }
 
     // close on app closes
-    //defer conn.Close()
+    defer conn.Close()
 
-    //fmt.Println("connected to switch")
+    fmt.Println("connected to switch")
 
     // create senzie
-    //senzie := &Senzie {
-    //    name: config.senzieName,
-    //    out: make(chan Senz),
-    //    quit: make(chan bool),
-    //    tik: make(chan string),
-    //    reader: bufio.NewReader(conn),
-    //    writer: bufio.NewWriter(conn),
-    //    conn: conn,
-    //}
-    //registering(senzie)
+    senzie := &Senzie {
+        name: config.senzieName,
+        out: make(chan Senz),
+        quit: make(chan bool),
+        tik: make(chan string),
+        reader: bufio.NewReader(conn),
+        writer: bufio.NewWriter(conn),
+        conn: conn,
+    }
+    registering(senzie)
 
     // close session
     clearCStarSession()
@@ -146,7 +156,7 @@ func reading(senzie *Senzie) {
 
         // parse and handle
         senz := parse(msg)
-        handling(senzie, &senz)
+        go handling(senzie, &senz)
     }
 }
 
