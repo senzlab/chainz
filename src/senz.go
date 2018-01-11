@@ -19,7 +19,7 @@ type Senzie struct {
 
 type Senz struct {
     Msg         string
-    Uid          string
+    Uid         string
     Ztype       string
     Sender      string
     Receiver    string
@@ -173,6 +173,8 @@ func handling(senzie *Senzie, senz *Senz) {
 
             // send status back to fromAcc
             senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], cheque.Id.String(), cheque.BankId, senz.Sender)
+
+            // TODO call finacle to hold the amount
 
             // forward cheque to toAcc
             senzie.out <- chequeSenz(cheque, senz.Sender, senz.Attr["to"], uid())

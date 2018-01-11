@@ -22,6 +22,11 @@ type CassandraConfig struct {
     consistancy string
 }
 
+type BankConfig struct {
+    authApi     string
+    finacleApi  string
+}
+
 var config = Config {
     switchName: getEnv("SWITCH_NAME", "senzswitch"),
     switchHost: getEnv("SWITCH_HOST", "www.rahasak.com"),
@@ -38,6 +43,11 @@ var cassandraConfig = CassandraConfig {
     port: getEnv("CASSANDRA_PORT", "9042"),
     keyspace: getEnv("CASSANDRA_KEYSPACE", "cchain"),
     consistancy: getEnv("CASSANDRA_CONSISTANCY", "ALL"),
+}
+
+var bankConfig = BankConfig {
+    authApi: getEnv("AUTH_API", "api/auth/v1"),
+    finacleApi: getEnv("FINACLE_API", "http://wsf.cdyne.com/WeatherWS/Weather.asmx"),
 }
 
 func getEnv(key, fallback string) string {
