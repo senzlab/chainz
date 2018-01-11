@@ -4,6 +4,7 @@ import (
     "net/http"
     "bytes"
     "text/template"
+	"io/ioutil"
 )
 
 func hold(acc string, amnt int) error {
@@ -33,6 +34,8 @@ func hold(acc string, amnt int) error {
 		return err
 	}
 	defer resp.Body.Close()
+
+    println(resp.StatusCode)
 	if resp.StatusCode != 200 {
         println("invalid response")
         // TODO
@@ -40,6 +43,12 @@ func hold(acc string, amnt int) error {
 	}
 
     // parse response and take account hold status
+    resXml, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+        println(err.Error)
+		return err
+	}
+    println(string(resXml))
 
     return nil
 }
@@ -59,7 +68,7 @@ func holdRequest(postalCode string)(string, error) {
 
     reqTem := `
     <?xml version="1.0" encoding="utf-8">
-    <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">;
+    <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
         <soap:Body>
             <GetCityWeatherByZIP xmlns="http://ws.cdyne.com/WeatherWS/">
 	            <ZIP>{{.PostalCode}}</ZIP>

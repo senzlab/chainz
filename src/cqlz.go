@@ -3,6 +3,7 @@ package main
 import (
     "os"
     "strconv"
+	"errors"
 
 	"github.com/gocql/gocql"
 )
@@ -112,6 +113,36 @@ func createCheque(cheque *Cheque) error {
     }
 
     return err
+}
+
+func getCheque(cId string)(*Cheque, error) {
+    uuid, err := gocql.ParseUUID(cId)
+    if err != nil {
+        println(err.Error)
+        return nil, err
+    }
+
+    m := map[string]interface{}{}
+    q := `
+        SELECT bank_id, id, amount, date, img
+        FROM cheques
+            WHERE id=?
+            LIMIT 1
+        ALLOW FILTERING
+    `
+    itr := Session.Query(q,  uuid).Consistency(gocql.One).Iter()
+    for itr.MapScan(m) {
+        cheque := &Cheque{}
+        cheque.BankId = m["bank_id"].(string)
+        cheque.Id = m["id"].(gocql.UUID)
+        cheque.Amount = m["amount"].(int)
+        cheque.Date = m["date"].(string)
+        cheque.Img = m["img"].(string)
+
+        return cheque, nil
+    }
+
+    return nil, errors.New("Not found cheque")
 }
 
 func isDoubleSpend(from string, to string, cid string)bool {

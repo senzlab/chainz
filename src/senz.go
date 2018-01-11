@@ -185,16 +185,20 @@ func handling(senzie *Senzie, senz *Senz) {
                 // send error status back
                 senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
             } else {
-                // create trans
-                trans := senzToTrans(senz)
-                trans.Status = "DEPOSIT"
-                cuuid, err := cuuid(cId)
+                // get cheque first
+                cheque, err := getCheque(cId)
                 if err != nil {
-                    // means error, send error status back
                     senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
                 } else {
-                    trans.ChequeId = cuuid
+                    // create trans
+                    trans := senzToTrans(senz)
+                    trans.Status = "DEPOSIT"
+                    trans.ChequeId = cheque.Id
+                    trans.ChequeImg = cheque.Img
                     createTrans(trans)
+
+                    // send success status back
+                    senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], cId, "cbid", senz.Sender)
                 }
             }
         }

@@ -2,6 +2,9 @@ FROM golang:1.9
 
 MAINTAINER Eranga Bandara (erangaeb@gmail.com)
 
+# install dependencies
+RUN go get github.com/gocql/gocql
+
 # env
 ENV SWITCH_NAME senzswitch
 ENV SWITCH_HOST dev.localhost
