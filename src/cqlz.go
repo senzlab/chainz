@@ -153,3 +153,7 @@ func isDoubleSpend(from string, to string, cid string)bool {
 func uuid() gocql.UUID {
     return gocql.TimeUUID()
 }
+
+func cuuid(cid string) (gocql.UUID, error) {
+    return gocql.ParseUUID(cid)
+}

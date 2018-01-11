@@ -180,13 +180,20 @@ func handling(senzie *Senzie, senz *Senz) {
             // this mean already transfered cheque
             // check for double spend
             if(isDoubleSpend(senz.Sender, senz.Attr["to"], cId)) {
-                // TODO send error status back
+                // send error status back
+                senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
             } else {
-                // TODO create trans
+                // create trans
                 trans := senzToTrans(senz)
-                // TODO trans.ChequeId = cId
                 trans.Status = "DEPOSIT"
-                createTrans(trans)
+                cuuid, err := cuuid(cId)
+                if err != nil {
+                    // means error, send error status back
+                    senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
+                } else {
+                    trans.ChequeId = cuuid
+                    createTrans(trans)
+                }
             }
         }
     }
