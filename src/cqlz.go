@@ -115,7 +115,7 @@ func createCheque(cheque *Cheque) error {
     return err
 }
 
-func getCheque(cId string)(*Cheque, error) {
+func getCheque(bankId string, cId string)(*Cheque, error) {
     uuid, err := gocql.ParseUUID(cId)
     if err != nil {
         println(err.Error)
@@ -126,11 +126,11 @@ func getCheque(cId string)(*Cheque, error) {
     q := `
         SELECT bank_id, id, amount, date, img
         FROM cheques
-            WHERE id=?
-            LIMIT 1
-        ALLOW FILTERING
+            WHERE bank_id = ?
+            AND id = ?
+        LIMIT 1
     `
-    itr := Session.Query(q,  uuid).Consistency(gocql.One).Iter()
+    itr := Session.Query(q, bankId, uuid).Consistency(gocql.One).Iter()
     for itr.MapScan(m) {
         cheque := &Cheque{}
         cheque.BankId = m["bank_id"].(string)

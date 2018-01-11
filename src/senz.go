@@ -186,7 +186,7 @@ func handling(senzie *Senzie, senz *Senz) {
                 senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
             } else {
                 // get cheque first
-                cheque, err := getCheque(cId)
+                cheque, err := getCheque(senz.Attr["cbnk"], cId)
                 if err != nil {
                     senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
                 } else {
