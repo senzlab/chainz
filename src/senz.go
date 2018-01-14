@@ -154,10 +154,10 @@ func writing(senzie *Senzie)  {
 }
 
 func handling(senzie *Senzie, senz *Senz) {
-    // frist send AWA back
-    senzie.out <- awaSenz(senz.Attr["uid"])
-
     if(senz.Ztype == "SHARE") {
+        // frist send AWA back
+        senzie.out <- awaSenz(senz.Attr["uid"])
+
         // we only handle share cheques
         if cId, ok := senz.Attr["cid"]; !ok {
             // this means new cheque
@@ -202,5 +202,10 @@ func handling(senzie *Senzie, senz *Senz) {
                 }
             }
         }
+    } else if(senz.Ztype == "DATA") {
+        // writng awa back
+        senzie.out <- awaSenz(senz.Attr["uid"])
+
+        // TODO handle further
     }
 }
