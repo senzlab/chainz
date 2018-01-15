@@ -11,7 +11,7 @@ type Senzie struct {
     name        string
 	out         chan string
     quit        chan bool
-    tik         chan string
+    tuk         chan string
     reader      *bufio.Reader
     writer      *bufio.Writer
     conn        *net.TCPConn
@@ -58,7 +58,7 @@ func main() {
         name: config.senzieName,
         out: make(chan string),
         quit: make(chan bool),
-        tik: make(chan string),
+        tuk: make(chan string),
         reader: bufio.NewReader(conn),
         writer: bufio.NewWriter(conn),
         conn: conn,
@@ -117,7 +117,7 @@ func reading(senzie *Senzie) {
             continue READER
         } else if(msg == "TIK;") {
             // send TIK
-            senzie.tik <- "TUK;"
+            senzie.tuk <- "TUK;"
             continue READER
         } else if(msg == "TUK;") {
             continue READER
@@ -145,9 +145,9 @@ func writing(senzie *Senzie)  {
             // send
             senzie.writer.WriteString(senz + ";")
             senzie.writer.Flush()
-        case tik := <- senzie.tik:
-            println("ticking -- " )
-            senzie.writer.WriteString(tik)
+        case tuk := <- senzie.tuk:
+            println("tuk -- " )
+            senzie.writer.WriteString(tuk)
             senzie.writer.Flush()
         }
     }
