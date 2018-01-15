@@ -171,6 +171,8 @@ func handling(senzie *Senzie, senz *Senz) {
             trans.Status = "TRANSFER"
             createTrans(trans)
 
+            // TODO handle create failures
+
             // send status back to fromAcc
             senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], cheque.Id.String(), cheque.BankId, senz.Sender)
 

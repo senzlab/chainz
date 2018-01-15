@@ -69,30 +69,36 @@ func consistancy(c string) gocql.Consistency {
     return gc
 }
 
-func createTrans(trans *Trans) error {
-    q := `
-        INSERT INTO trans (
-            bank_id,
-            id,
-            cheque_bank_id,
-            cheque_id,
-            cheque_amount,
-            cheque_date,
-            cheque_img,
-            from_acc,
-            to_acc,
-            timestamp,
-            digsig,
-            status
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `
-    err := Session.Query(q, trans.BankId, trans.Id, trans.ChequeBankId, trans.ChequeId, trans.ChequeAmount, trans.ChequeDate, trans.ChequeImg, trans.FromAcc, trans.ToAcc, trans.Timestamp, trans.Digsig, trans.Status).Exec()
-    if err != nil {
-        println(err.Error())
+func createTrans(trans *Trans)error {
+    insert := func(table string)error {
+        q := "INSERT INTO " + table + ` (
+                bank_id,
+                id,
+                cheque_bank_id,
+                cheque_id,
+                cheque_amount,
+                cheque_date,
+                cheque_img,
+                from_acc,
+                to_acc,
+                timestamp,
+                digsig,
+                status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        err := Session.Query(q, trans.BankId, trans.Id, trans.ChequeBankId, trans.ChequeId, trans.ChequeAmount, trans.ChequeDate, trans.ChequeImg, trans.FromAcc, trans.ToAcc, trans.Timestamp, trans.Digsig, trans.Status).Exec()
+        if err != nil {
+            println(err.Error())
+        }
+
+        return err
     }
 
-    return err
+    // insert to both trans and transactions
+    insert("trans")
+    insert("transactions")
+
+    return nil
 }
 
 func createCheque(cheque *Cheque) error {
