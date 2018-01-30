@@ -89,6 +89,9 @@ func registering(senzie *Senzie) {
     senz := parse(msg)
     if(senz.Attr["status"] == "REG_DONE" || senz.Attr["status"] == "REG_ALR") {
         println("reg done...")
+        // send AWA back
+        senzie.out <- awaSenz(senz.Attr["uid"])
+
         // start reading and writing
         go writing(senzie)
         reading(senzie)

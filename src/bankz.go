@@ -24,7 +24,7 @@ func hold(acc string, amnt int) error {
 
     // headers
 	req.Header.Add("SOAPAction", `"http://ws.cdyne.com/WeatherWS/GetCityWeatherByZIP"`)
-	req.Header.Add("Content-Type", "text/xml; charset=utf-8")
+	req.Header.Add("Content-Type", "text/xml; charset=UTF-8")
 	req.Header.Add("Accept", "text/xml")
 
     // send request
