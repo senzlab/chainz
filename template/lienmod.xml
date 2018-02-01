@@ -1,0 +1,63 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://webservice.fiusb.ci.infosys.com">
+    <soapenv:Header/>
+    <soapenv:Body>
+        <web:executeService>
+		    <arg_0_0>
+<![CDATA[
+<FIXML xsi:schemaLocation="http://www.finacle.com/fixml AcctLienMod.xsd" xmlns="http://www.finacle.com/fixml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <Header>
+      <RequestHeader>
+         <MessageKey>
+            <RequestUUID>Req_1487238978693</RequestUUID>
+            <ServiceRequestId>AcctLienMod</ServiceRequestId>
+            <ServiceRequestVersion>10.2</ServiceRequestVersion>
+            <ChannelId>COR</ChannelId>
+            <LanguageId/>
+         </MessageKey>
+         <RequestMessageInfo>
+            <BankId>01</BankId>
+            <TimeZone/>
+            <EntityId/>
+            <EntityType/>
+            <ArmCorrelationId/>
+            <MessageDateTime>2017-01-16T15:26:18.691</MessageDateTime>
+         </RequestMessageInfo>
+         <Security>
+            <Token>
+               <PasswordToken>
+                  <UserId/>
+                  <Password/>
+               </PasswordToken>
+            </Token>
+            <FICertToken/>
+            <RealUserLoginSessionId/>
+            <RealUser/>
+            <RealUserPwd/>
+            <SSOTransferToken/>
+         </Security>
+      </RequestHeader>
+   </Header>
+   <Body>
+        <AcctLienModRequest>
+            <AcctLienModRq>
+                <AcctId>
+                    <AcctId>{{.Account}}<AcctId/>
+                </AcctId>
+                <ModuleType>{{.Module}}<ModuleType/>
+                <LienDtls>
+                    <LienId>{{.LienId}}<LienId/>
+                    <NewLienAmt>
+                        <amountValue>{{.Amount}}<amountValue/>
+                        <currencyCode>{{.Currency}}<currencyCode/>
+                    </NewLienAmt>
+                </LienDtls>
+            </AcctLienModRq>
+            <AcctLienMod_CustomData/>
+        </AcctLienModRequest>
+   </Body>
+</FIXML>
+]]>
+		    </arg_0_0>
+        </web:executeService>
+    </soapenv:Body>
+</soapenv:Envelope>

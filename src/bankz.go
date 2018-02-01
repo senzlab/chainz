@@ -20,6 +20,9 @@ type LienAdd struct {
 type LienMod struct {
     Id string
     Account string
+    Module string
+    Amount string
+    Currency string
 }
 
 func hold(acc string, amnt string) error {
@@ -104,6 +107,34 @@ func lienAddReq(account string, amount string)(string, error) {
     return buf.String(), nil
 }
 
-func lienModReq() {
+func lienModReq(account string, lienId string)(string, error) {
+    // format template path
+    cwd, _ := os.Getwd()
+    tp := filepath.Join(cwd, "./template/lienmod.xml")
+    println(tp)
 
+    // template from file
+    t, err := template.ParseFiles(tp)
+    if err != nil {
+        println(err.Error())
+        return "", err
+    }
+
+    // lienadd params
+    lm := LienMod{}
+    lm.Account = account
+    lm.Module = "U"
+    lm.Id = lienId
+    lm.Amount = "0"
+    lm.Currency = "LKR"
+
+    // parse template
+    var buf bytes.Buffer
+    err = t.Execute(&buf, lm)
+    if err != nil {
+        println(err.Error())
+        return "", err
+    }
+
+    return buf.String(), nil
 }
