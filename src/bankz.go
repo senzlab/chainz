@@ -1,17 +1,32 @@
 package main
 
 import (
+    "os"
     "net/http"
     "bytes"
     "text/template"
 	"io/ioutil"
+    "path/filepath"
 )
 
-func hold(acc string, amnt int) error {
+type LienAdd struct {
+    Account string
+    Module string
+    Amount string
+    Currency string
+    Reason string
+}
+
+type LienMod struct {
+    Id string
+    Account string
+}
+
+func hold(acc string, amnt string) error {
 	client := &http.Client{}
 
     // request with xml soap data
-    reqXml, err := holdRequest("34444")
+    reqXml, err := lienAddReq(acc, amnt)
     if err != nil {
         println(err.Error)
 		return err
@@ -23,7 +38,7 @@ func hold(acc string, amnt int) error {
 	}
 
     // headers
-	req.Header.Add("SOAPAction", `"http://ws.cdyne.com/WeatherWS/GetCityWeatherByZIP"`)
+	req.Header.Add("SOAPAction", "http://ws.cdyne.com/WeatherWS/GetCityWeatherByZIP")
 	req.Header.Add("Content-Type", "text/xml; charset=UTF-8")
 	req.Header.Add("Accept", "text/xml")
 
@@ -57,34 +72,30 @@ func release(acc string, amnt int) {
 
 }
 
-func transfer(from string, to string, amount int) {
+func lienAddReq(account string, amount string)(string, error) {
+    // format template path
+    cwd, _ := os.Getwd()
+    tp := filepath.Join(cwd, "./template/lienadd.xml")
+    println(tp)
 
-}
-
-func holdRequest(postalCode string)(string, error) {
-    type RequestParam struct {
-        PostalCode string
-    }
-
-    reqTem := `
-    <?xml version="1.0" encoding="utf-8">
-    <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-        <soap:Body>
-            <GetCityWeatherByZIP xmlns="http://ws.cdyne.com/WeatherWS/">
-	            <ZIP>{{.PostalCode}}</ZIP>
-	        </GetCityWeatherByZIP>
-        </soap:Body>
-    </soap:Envelope>
-    `
-    p := RequestParam{PostalCode: postalCode}
-    t, err := template.New("HoldRequest").Parse(reqTem)
+    // template from file
+    t, err := template.ParseFiles(tp)
     if err != nil {
         println(err.Error())
         return "", err
     }
 
+    // lienadd params
+    la := LienAdd{}
+    la.Account = account
+    la.Module = "U"
+    la.Amount = amount
+    la.Currency = "LKR"
+    la.Reason = "03"
+
+    // parse template
     var buf bytes.Buffer
-    err = t.Execute(&buf, p)
+    err = t.Execute(&buf, la)
     if err != nil {
         println(err.Error())
         return "", err
@@ -93,10 +104,6 @@ func holdRequest(postalCode string)(string, error) {
     return buf.String(), nil
 }
 
-func releaseRequest() {
-
-}
-
-func trasferRequest() {
+func lienModReq() {
 
 }

@@ -28,6 +28,18 @@ type Senz struct {
 }
 
 func main() {
+    // lien add params
+    la := LienAdd{}
+    la.Account = "32323"
+    la.Module = "U"
+    la.Amount = "3400.00"
+    la.Currency = "SEK"
+    la.Reason = "03"
+
+    read(la)
+}
+
+func m() {
     // first init key pair
     setUpKeys()
 
