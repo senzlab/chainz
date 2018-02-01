@@ -168,7 +168,7 @@ func handling(senzie *Senzie, senz *Senz) {
             // create trans
             trans := senzToTrans(senz)
             trans.ChequeId = cheque.Id
-            trans.Status = "TRANSFER"
+            trans.State = "TRANSFER"
             createTrans(trans)
 
             // TODO handle create failures
@@ -194,7 +194,7 @@ func handling(senzie *Senzie, senz *Senz) {
                 } else {
                     // create trans
                     trans := senzToTrans(senz)
-                    trans.Status = "DEPOSIT"
+                    trans.State = "DEPOSIT"
                     trans.ChequeId = cheque.Id
                     trans.ChequeImg = cheque.Img
                     createTrans(trans)
@@ -208,6 +208,9 @@ func handling(senzie *Senzie, senz *Senz) {
         // writng awa back
         senzie.out <- awaSenz(senz.Attr["uid"])
 
-        // TODO handle further
+        // update check status in db
+        if (senz.Attr["status"] == "CHEQUE_SHARED") {
+
+        }
     }
 }

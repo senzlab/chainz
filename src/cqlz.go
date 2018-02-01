@@ -20,7 +20,7 @@ type Trans struct {
     ToAcc           string
     Timestamp       int64
     Digsig          string
-    Status          string
+    State           string
 }
 
 type Cheque struct {
@@ -72,9 +72,9 @@ func consistancy(c string) gocql.Consistency {
 func createTrans(trans *Trans)error {
     insert := func(table string)error {
         q := "INSERT INTO " + table + ` (
-                bank_id,
+                bank,
                 id,
-                cheque_bank_id,
+                cheque_bank,
                 cheque_id,
                 cheque_amount,
                 cheque_date,
@@ -83,10 +83,10 @@ func createTrans(trans *Trans)error {
                 to_acc,
                 timestamp,
                 digsig,
-                status
+                state
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        err := Session.Query(q, trans.BankId, trans.Id, trans.ChequeBankId, trans.ChequeId, trans.ChequeAmount, trans.ChequeDate, trans.ChequeImg, trans.FromAcc, trans.ToAcc, trans.Timestamp, trans.Digsig, trans.Status).Exec()
+        err := Session.Query(q, trans.BankId, trans.Id, trans.ChequeBankId, trans.ChequeId, trans.ChequeAmount, trans.ChequeDate, trans.ChequeImg, trans.FromAcc, trans.ToAcc, trans.Timestamp, trans.Digsig, trans.State).Exec()
         if err != nil {
             println(err.Error())
         }
@@ -101,10 +101,34 @@ func createTrans(trans *Trans)error {
     return nil
 }
 
+func updateTrans(state string, bank string, id string) error {
+    update := func(table string)error {
+        q := "UPDATE " + table + " " +
+             `
+              SET state = ?
+              WHERE
+                bank = ?
+                AND id = ?
+             `
+        err := Session.Query(q, state, bank, id).Exec()
+        if err != nil {
+            println(err.Error())
+        }
+
+        return err
+    }
+
+    // insert to both trans and transactions
+    update("trans")
+    update("transactions")
+
+    return nil
+}
+
 func createCheque(cheque *Cheque) error {
     q := `
         INSERT INTO cheques (
-            bank_id,
+            bank,
             id,
             amount,
             date,
@@ -130,16 +154,16 @@ func getCheque(bankId string, cId string)(*Cheque, error) {
 
     m := map[string]interface{}{}
     q := `
-        SELECT bank_id, id, amount, date, img
+        SELECT bank, id, amount, date, img
         FROM cheques
-            WHERE bank_id = ?
+            WHERE bank = ?
             AND id = ?
         LIMIT 1
     `
     itr := Session.Query(q, bankId, uuid).Consistency(gocql.One).Iter()
     for itr.MapScan(m) {
         cheque := &Cheque{}
-        cheque.BankId = m["bank_id"].(string)
+        cheque.BankId = m["bank"].(string)
         cheque.Id = m["id"].(gocql.UUID)
         cheque.Amount = m["amount"].(int)
         cheque.Date = m["date"].(string)
