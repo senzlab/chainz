@@ -9,7 +9,7 @@ RUN go get github.com/gocql/gocql
 ENV SWITCH_NAME senzswitch
 ENV SWITCH_HOST dev.localhost
 ENV SWITCH_PORT 7070
-ENV SENZIE_NAME sampath
+ENV SENZIE_NAME sampath.chain
 ENV SENZIE_MODE DEV
 
 # copy app

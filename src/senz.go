@@ -158,7 +158,6 @@ func handling(senzie *Senzie, senz *Senz) {
         // frist send AWA back
         senzie.out <- awaSenz(senz.Attr["uid"])
 
-        // we only handle share cheques
         if cId, ok := senz.Attr["cid"]; !ok {
             // this means new cheque
             // create cheque
