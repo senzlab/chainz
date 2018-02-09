@@ -195,6 +195,10 @@ func handling(senzie *Senzie, senz *Senz) {
                     trans.ChequeImg = cheque.Img
                     createTrans(trans)
 
+                    // TODO call finacle to release the amount
+
+                    // TODO call finacle to transfer fund
+
                     // send success status back
                     senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], cId, "cbid", senz.Sender)
                 }
