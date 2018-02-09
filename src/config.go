@@ -22,8 +22,10 @@ type CassandraConfig struct {
     consistancy string
 }
 
-type BankConfig struct {
-    finacleApi      string
+type FinacleConfig struct {
+    api             string
+    lienAddAction   string
+    lienModAction   string
 }
 
 var config = Config {
@@ -44,8 +46,10 @@ var cassandraConfig = CassandraConfig {
     consistancy: getEnv("CASSANDRA_CONSISTANCY", "ALL"),
 }
 
-var bankConfig = BankConfig {
-    finacleApi: getEnv("FINACLE_API", "https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService"),
+var finacleConfig = FinacleConfig {
+    api: getEnv("FINACLE_API", "https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService"),
+    lienAddAction: getEnv("LIEN_ADD_ACTION", "https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService"),
+    lienModAction: getEnv("LIEN_MOD_ACTION", "https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService"),
 }
 
 func getEnv(key, fallback string) string {

@@ -25,7 +25,7 @@ type LienMod struct {
     Currency string
 }
 
-func hold(acc string, amnt string) error {
+func lienAdd(acc string, amnt string) error {
 	client := &http.Client{}
 
     // request with xml soap data
@@ -34,14 +34,14 @@ func hold(acc string, amnt string) error {
         println(err.Error)
 		return err
     }
-	req, err := http.NewRequest("POST", bankConfig.finacleApi, bytes.NewBuffer([]byte(reqXml)))
+	req, err := http.NewRequest("POST", finacleConfig.api, bytes.NewBuffer([]byte(reqXml)))
 	if err != nil {
         println(err.Error)
 		return err
 	}
 
     // headers
-	req.Header.Add("SOAPAction", "http://ws.cdyne.com/WeatherWS/GetCityWeatherByZIP")
+	req.Header.Add("SOAPAction", finacleConfig.lienAddAction)
 	req.Header.Add("Content-Type", "text/xml; charset=UTF-8")
 	req.Header.Add("Accept", "text/xml")
 
@@ -71,8 +71,50 @@ func hold(acc string, amnt string) error {
     return nil
 }
 
-func release(acc string, amnt int) {
+func lienMod(acc string, lienId string)error {
+	client := &http.Client{}
 
+    // request with xml soap data
+    reqXml, err := lienModReq(acc, lienId)
+    if err != nil {
+        println(err.Error)
+		return err
+    }
+	req, err := http.NewRequest("POST", finacleConfig.api, bytes.NewBuffer([]byte(reqXml)))
+	if err != nil {
+        println(err.Error)
+		return err
+	}
+
+    // headers
+	req.Header.Add("SOAPAction", finacleConfig.lienModAction)
+	req.Header.Add("Content-Type", "text/xml; charset=UTF-8")
+	req.Header.Add("Accept", "text/xml")
+
+    // send request
+    resp, err := client.Do(req)
+	if err != nil {
+        println(err.Error)
+		return err
+	}
+	defer resp.Body.Close()
+
+    println(resp.StatusCode)
+	if resp.StatusCode != 200 {
+        println("invalid response")
+        // TODO
+        return nil
+	}
+
+    // parse response and take account hold status
+    resXml, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+        println(err.Error)
+		return err
+	}
+    println(string(resXml))
+
+    return nil
 }
 
 func lienAddReq(account string, amount string)(string, error) {
