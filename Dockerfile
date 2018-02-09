@@ -11,6 +11,11 @@ ENV SWITCH_HOST dev.localhost
 ENV SWITCH_PORT 7070
 ENV SENZIE_NAME sampath.chain
 ENV SENZIE_MODE DEV
+ENV CASSANDRA_HOST dev.localhost
+ENV CASSANDRA_PORT 9042
+ENV FINACLE_API https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService
+ENV LIEN_ADD_ACTION https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService
+ENV LIEN_MOD_ACTION https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService
 
 # copy app
 ADD . /app
