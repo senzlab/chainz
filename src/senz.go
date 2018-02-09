@@ -123,8 +123,6 @@ func reading(senzie *Senzie) {
             continue READER
         }
 
-        println("---- " + msg)
-
         // parse and handle
         senz := parse(msg)
         go handling(senzie, &senz)
@@ -146,7 +144,6 @@ func writing(senzie *Senzie)  {
             senzie.writer.WriteString(senz + ";")
             senzie.writer.Flush()
         case tuk := <- senzie.tuk:
-            println("tuk -- " )
             senzie.writer.WriteString(tuk)
             senzie.writer.Flush()
         }

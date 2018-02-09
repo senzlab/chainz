@@ -1,8 +1,8 @@
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://webservice.fiusb.ci.infosys.com">
-    <soapenv:Header/>
-    <soapenv:Body>
-        <web:executeService>
-		    <arg_0_0>
+   <soapenv:Header/>
+   <soapenv:Body>
+      <web:executeService>
+         <arg_0_0>     
 <![CDATA[
 <FIXML xsi:schemaLocation="http://www.finacle.com/fixml AcctLienAdd.xsd" xmlns="http://www.finacle.com/fixml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
    <Header>
@@ -20,7 +20,7 @@
             <EntityId/>
             <EntityType/>
             <ArmCorrelationId/>
-            <MessageDateTime>2017-01-16T15:26:18.691</MessageDateTime>
+            <MessageDateTime>2018-02-07T11:20:49.657</MessageDateTime>
          </RequestMessageInfo>
          <Security>
             <Token>
@@ -43,14 +43,14 @@
               <AcctId>
                   <AcctId>{{.Account}}</AcctId>
               </AcctId>
-              <ModuleType>{{.Module}}<ModuleType/>
+              <ModuleType>ULIEN</ModuleType>
               <LienDtls>
                   <LienId/>
                   <NewLienAmt>
-                      <amountValue>{{.Amount}}<amountValue/>
-                      <currencyCode>{{.Currency}}<currencyCode/>
+                      <amountValue>{{.Amount}}</amountValue>
+                      <currencyCode>{{.Currency}}</currencyCode>
                   </NewLienAmt>
-                  <ReasonCode>{{.Reason}}<ReasonCode/>
+                  <ReasonCode>03</ReasonCode>
                   <Rmks/>
               </LienDtls>
           </AcctLienAddRq>
@@ -59,7 +59,7 @@
    </Body>
 </FIXML>
 ]]>
-		    </arg_0_0>
-        </web:executeService>
-    </soapenv:Body>
+         </arg_0_0>
+      </web:executeService>
+   </soapenv:Body>
 </soapenv:Envelope>

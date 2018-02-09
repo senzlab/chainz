@@ -91,10 +91,8 @@ func lienAddReq(account string, amount string)(string, error) {
     // lienadd params
     la := LienAdd{}
     la.Account = account
-    la.Module = "U"
     la.Amount = amount
     la.Currency = "LKR"
-    la.Reason = "03"
 
     // parse template
     var buf bytes.Buffer
@@ -123,7 +121,6 @@ func lienModReq(account string, lienId string)(string, error) {
     // lienadd params
     lm := LienMod{}
     lm.Account = account
-    lm.Module = "U"
     lm.Id = lienId
     lm.Amount = "0"
     lm.Currency = "LKR"
