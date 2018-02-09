@@ -23,8 +23,7 @@ type CassandraConfig struct {
 }
 
 type BankConfig struct {
-    authApi     string
-    finacleApi  string
+    finacleApi      string
 }
 
 var config = Config {
@@ -46,8 +45,7 @@ var cassandraConfig = CassandraConfig {
 }
 
 var bankConfig = BankConfig {
-    authApi: getEnv("AUTH_API", "api/auth/v1"),
-    finacleApi: getEnv("FINACLE_API", "http://wsf.cdyne.com/WeatherWS/Weather.asmx"),
+    finacleApi: getEnv("FINACLE_API", "https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService"),
 }
 
 func getEnv(key, fallback string) string {
