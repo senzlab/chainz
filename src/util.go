@@ -81,18 +81,19 @@ func senzToCheque(senz *Senz)*Cheque {
     cheque.Amount = 1000
     cheque.Date = senz.Attr["cdate"]
     cheque.Img = senz.Attr["cimg"]
+    cheque.Originator = senz.Sender
 
     return cheque
 }
 
 func senzToTrans(senz *Senz)*Trans {
     trans := &Trans{}
-    trans.BankId = config.senzieName 
+    trans.BankId = config.senzieName
     trans.Id = uuid()
-    trans.ChequeBankId = senz.Attr["cbnk"] 
+    trans.ChequeBankId = senz.Attr["cbnk"]
     trans.ChequeAmount = 1000
-    trans.ChequeDate = senz.Attr["cdate"] 
-    trans.ChequeImg = senz.Attr["cimg"] 
+    trans.ChequeDate = senz.Attr["cdate"]
+    trans.ChequeImg = senz.Attr["cimg"]
     trans.FromAcc = senz.Sender
     trans.ToAcc = senz.Attr["to"]
     trans.Digsig = senz.Digsig

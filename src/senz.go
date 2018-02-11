@@ -158,20 +158,11 @@ func handling(senzie *Senzie, senz *Senz) {
 
         if cId, ok := senz.Attr["cid"]; !ok {
             // this means new cheque
-            // create cheque
+            // and new trans
             cheque := senzToCheque(senz)
-            createCheque(cheque)
-
-            // create trans
             trans := senzToTrans(senz)
             trans.ChequeId = cheque.Id
             trans.State = "TRANSFER"
-            createTrans(trans)
-
-            // TODO handle create failures
-
-            // send status back to fromAcc
-            senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], cheque.Id.String(), cheque.BankId, senz.Sender)
 
             // call finacle to hold the amount
             lienId, err := lienAdd(trans.FromAcc, strconv.Itoa(trans.ChequeAmount))
@@ -179,6 +170,19 @@ func handling(senzie *Senzie, senz *Senz) {
                 senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
                 return
             }
+
+            // we need to set lienId of the cheque
+            cheque.LienId = lienId
+
+            // create cheque
+            // create trans
+            createCheque(cheque)
+            createTrans(trans)
+
+            // TODO handle create failures
+
+            // send status back to fromAcc
+            senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], cheque.Id.String(), cheque.BankId, senz.Sender)
 
             // forward cheque to toAcc
             senzie.out <- chequeSenz(cheque, senz.Sender, senz.Attr["to"], uid(), lienId)
@@ -194,19 +198,21 @@ func handling(senzie *Senzie, senz *Senz) {
                 if err != nil {
                     senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
                 } else {
-                    // create trans
+                    // new trans
                     trans := senzToTrans(senz)
                     trans.State = "DEPOSIT"
                     trans.ChequeId = cheque.Id
                     trans.ChequeImg = cheque.Img
-                    createTrans(trans)
 
                     // call finacle to release the amount
-                    err := lienMod(senz.Attr["from"], senz.Attr["lid"])
+                    err := lienMod(senz.Attr["from"], cheque.LienId)
                     if(err != nil) {
                         senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
                         return
                     }
+
+                    // create trans
+                    createTrans(trans)
 
                     // TODO call finacle to transfer fund
 
