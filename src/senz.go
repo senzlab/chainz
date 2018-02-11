@@ -5,6 +5,7 @@ import (
     "net"
     "bufio"
     "os"
+    "strconv"
 )
 
 type Senzie struct {
@@ -172,10 +173,15 @@ func handling(senzie *Senzie, senz *Senz) {
             // send status back to fromAcc
             senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], cheque.Id.String(), cheque.BankId, senz.Sender)
 
-            // TODO call finacle to hold the amount
+            // call finacle to hold the amount
+            lienId, err := lienAdd(trans.FromAcc, strconv.Itoa(trans.ChequeAmount))
+            if (err != nil) {
+                senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
+                return
+            }
 
             // forward cheque to toAcc
-            senzie.out <- chequeSenz(cheque, senz.Sender, senz.Attr["to"], uid())
+            senzie.out <- chequeSenz(cheque, senz.Sender, senz.Attr["to"], uid(), lienId)
         } else {
             // this mean already transfered cheque
             // check for double spend
@@ -195,7 +201,12 @@ func handling(senzie *Senzie, senz *Senz) {
                     trans.ChequeImg = cheque.Img
                     createTrans(trans)
 
-                    // TODO call finacle to release the amount
+                    // call finacle to release the amount
+                    err := lienMod(senz.Attr["from"], senz.Attr["lid"])
+                    if(err != nil) {
+                        senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
+                        return
+                    }
 
                     // TODO call finacle to transfer fund
 

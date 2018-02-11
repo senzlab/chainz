@@ -7,6 +7,7 @@ import (
     "text/template"
 	"io/ioutil"
     "path/filepath"
+    "errors"
 )
 
 type LienAdd struct {
@@ -25,19 +26,19 @@ type LienMod struct {
     Currency string
 }
 
-func lienAdd(acc string, amnt string) error {
+func lienAdd(acc string, amnt string) (string,error) {
 	client := &http.Client{}
 
     // request with xml soap data
     reqXml, err := lienAddReq(acc, amnt)
     if err != nil {
         println(err.Error)
-		return err
+		return "", err
     }
 	req, err := http.NewRequest("POST", finacleConfig.api, bytes.NewBuffer([]byte(reqXml)))
 	if err != nil {
         println(err.Error)
-		return err
+		return "", err
 	}
 
     // headers
@@ -49,26 +50,25 @@ func lienAdd(acc string, amnt string) error {
     resp, err := client.Do(req)
 	if err != nil {
         println(err.Error)
-		return err
+		return "", err
 	}
 	defer resp.Body.Close()
 
     println(resp.StatusCode)
 	if resp.StatusCode != 200 {
         println("invalid response")
-        // TODO
-        return nil
+        return "", errors.New("Invalid response")
 	}
 
     // parse response and take account hold status
     resXml, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
         println(err.Error)
-		return err
+		return "", err
 	}
     println(string(resXml))
 
-    return nil
+    return "323232", nil
 }
 
 func lienMod(acc string, lienId string)error {
@@ -102,8 +102,7 @@ func lienMod(acc string, lienId string)error {
     println(resp.StatusCode)
 	if resp.StatusCode != 200 {
         println("invalid response")
-        // TODO
-        return nil
+        return errors.New("Invalid response")
 	}
 
     // parse response and take account hold status
