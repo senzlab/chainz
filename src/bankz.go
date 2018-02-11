@@ -35,6 +35,8 @@ func lienAdd(acc string, amnt string) (string,error) {
         println(err.Error)
 		return "", err
     }
+    println(reqXml)
+
 	req, err := http.NewRequest("POST", finacleConfig.api, bytes.NewBuffer([]byte(reqXml)))
 	if err != nil {
         println(err.Error)
@@ -80,6 +82,8 @@ func lienMod(acc string, lienId string)error {
         println(err.Error)
 		return err
     }
+    println(reqXml)
+
 	req, err := http.NewRequest("POST", finacleConfig.api, bytes.NewBuffer([]byte(reqXml)))
 	if err != nil {
         println(err.Error)
