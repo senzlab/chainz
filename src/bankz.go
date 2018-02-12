@@ -27,6 +27,9 @@ type LienMod struct {
 }
 
 func lienAdd(acc string, amnt string) (string,error) {
+    // TODO remove this when comple bank integrations
+    return "4533434", nil
+
 	client := &http.Client{}
 
     // request with xml soap data
@@ -74,6 +77,9 @@ func lienAdd(acc string, amnt string) (string,error) {
 }
 
 func lienMod(acc string, lienId string)error {
+    // TODO remove this when comple bank integrations
+    return nil
+
 	client := &http.Client{}
 
     // request with xml soap data
