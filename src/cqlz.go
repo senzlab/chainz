@@ -140,7 +140,7 @@ func createCheque(cheque *Cheque) error {
         )
         VALUES (?, ?, ?, ?, ?, ?, ?)
     `
-    err := Session.Query(q, cheque.BankId, cheque.Id, cheque.Amount, cheque.Date, cheque.Img).Exec()
+    err := Session.Query(q, cheque.BankId, cheque.Id, cheque.Amount, cheque.Date, cheque.Img, cheque.Originator, cheque.LienId).Exec()
 
     if err != nil {
         println(err.Error())
