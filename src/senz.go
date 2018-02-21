@@ -13,7 +13,7 @@ type Senzie struct {
 	out         chan string
     quit        chan bool
     tuk         chan string
-    reader      *bufio.Reader
+    scanner      *bufio.Scanner
     writer      *bufio.Writer
     conn        *net.TCPConn
 }
@@ -27,6 +27,8 @@ type Senz struct {
     Attr        map[string]string
     Digsig      string
 }
+
+const maxCapacity = 1024 * 1024
 
 func main() {
     // first init key pair
@@ -55,79 +57,63 @@ func main() {
     fmt.Println("connected to switch")
 
     // create senzie
+    scanner := bufio.NewScanner(conn)
+    buf := make([]byte, maxCapacity)
+    scanner.Buffer(buf, maxCapacity)
+    scanner.Split(scanSemiColon)
     senzie := &Senzie {
         name: config.senzieName,
         out: make(chan string),
         quit: make(chan bool),
         tuk: make(chan string),
-        reader: bufio.NewReader(conn),
+        scanner: scanner,
         writer: bufio.NewWriter(conn),
         conn: conn,
     }
-    registering(senzie)
+
+    // send reg senz
+    z := regSenz()
+    senzie.writer.WriteString(z + ";")
+    senzie.writer.Flush()
+
+    // start writing
+    // start reading
+    go writing(senzie)
+    reading(senzie)
 
     // close session
     clearCStarSession()
 }
 
-func registering(senzie *Senzie) {
-    // send reg
-    z := regSenz()
-    senzie.writer.WriteString(z + ";")
-    senzie.writer.Flush()
-
-    // listen for reg status
-    msg, err := senzie.reader.ReadString(';')
-    if err != nil {
-        fmt.Println("Error reading: ", err.Error())
-
-        senzie.conn.Close()
-        os.Exit(1)
-    }
-
-    // parse senz
-    // check reg status
-    senz := parse(msg)
-    if(senz.Attr["status"] == "REG_DONE" || senz.Attr["status"] == "REG_ALR") {
-        // reg done
-        // start reading and writing
-        go writing(senzie)
-        reading(senzie)
-    } else {
-        // close and exit
-        senzie.conn.Close()
-        os.Exit(1)
-    }
-}
-
 func reading(senzie *Senzie) {
-    READER:
-    for {
-        // read data
-        msg, err := senzie.reader.ReadString(';')
-        if err != nil {
-            fmt.Println("Error reading: ", err.Error())
+    println("start reading...")
 
-            senzie.quit <- true
-            break READER
-        }
+    READER:
+    for senzie.scanner.Scan() {
+        // read data
+        msg := senzie.scanner.Text()
+        println(msg)
 
         // not handle TAK, TIK, TUK
-        if (msg == "TAK;") {
+        if (msg == "TAK") {
             // when connect, we recive TAK
             continue READER
-        } else if(msg == "TIK;") {
+        } else if(msg == "TIK") {
             // send TIK
             senzie.tuk <- "TUK;"
             continue READER
-        } else if(msg == "TUK;") {
+        } else if(msg == "TUK") {
             continue READER
-        }
+        } else {
+            // parse and handle
+            senz := parse(msg)
 
-        // parse and handle
-        senz := parse(msg)
-        go handling(senzie, &senz)
+            go handling(senzie, &senz)
+        }
     }
+
+    // exit
+    senzie.quit <- true
 }
 
 func writing(senzie *Senzie)  {
@@ -139,8 +125,6 @@ func writing(senzie *Senzie)  {
             println("quiting/write -- ")
             break WRITER
         case senz := <-senzie.out:
-            println("writing -- ")
-            println(senz)
             // send
             senzie.writer.WriteString(senz + ";")
             senzie.writer.Flush()
@@ -225,9 +209,15 @@ func handling(senzie *Senzie, senz *Senz) {
         // writng awa back
         senzie.out <- awaSenz(senz.Attr["uid"])
 
-        // update check status in db
-        if (senz.Attr["status"] == "CHEQUE_SHARED") {
-
+        // handle reg
+        if(senz.Attr["status"] == "REG_DONE" || senz.Attr["status"] == "REG_ALR") {
+            // reg done
+        } else if (senz.Attr["status"] == "REG_FAIL") {
+            // close and exit
+            senzie.conn.Close()
+            os.Exit(1)
+        } else if (senz.Attr["status"] == "CHEQUE_SHARED") {
+            // update check status in db
         }
     }
 }
