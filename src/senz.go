@@ -28,6 +28,9 @@ type Senz struct {
     Digsig      string
 }
 
+// buffer size
+const bufSize = 64 * 1024
+
 func main() {
     // first init key pair
     setUpKeys()
@@ -60,8 +63,8 @@ func main() {
         out: make(chan string),
         quit: make(chan bool),
         tuk: make(chan string),
-        reader: bufio.NewReader(conn),
-        writer: bufio.NewWriter(conn),
+        reader: bufio.NewReaderSize(conn, bufSize),
+        writer: bufio.NewWriterSize(conn, bufSize),
         conn: conn,
     }
     registering(senzie)
