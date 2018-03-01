@@ -28,6 +28,11 @@ type FinacleConfig struct {
     lienModAction   string
 }
 
+type VishwaConfig struct {
+    api             string
+    fundTransAction string
+}
+
 var config = Config {
     switchName: getEnv("SWITCH_NAME", "senzswitch"),
     switchHost: getEnv("SWITCH_HOST", "www.rahasak.com"),
@@ -50,6 +55,11 @@ var finacleConfig = FinacleConfig {
     api: getEnv("FINACLE_API", "https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService"),
     lienAddAction: getEnv("LIEN_ADD_ACTION", "https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService"),
     lienModAction: getEnv("LIEN_MOD_ACTION", "https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService"),
+}
+
+var vishwaConfig = VishwaConfig {
+    api: getEnv("VISHWA_API", "https://uatweb.sampath.lk/SVRClientWeb/services/MobileServicesMain"),
+    fundTransAction: getEnv("FUND_TRANS_ACTION", "http://mobileServices.web.app.sampath.org/MobileServicesMain/doLoginRequest"),
 }
 
 func getEnv(key, fallback string) string {

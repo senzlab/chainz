@@ -132,14 +132,13 @@ func statusSenz(status string, uid string, cid string, cbnk string, to string)st
     return z + " " + s
 }
 
-func chequeSenz(cheque *Cheque, from string, to string, uid string, lienId string)string {
+func chequeSenz(cheque *Cheque, from string, to string, uid string)string {
     z := "SHARE #cbnk " + cheque.BankId +
                 " #cid " + cheque.Id.String() +
                 " #cbnk " + cheque.BankId +
                 " #camnt " + strconv.Itoa(cheque.Amount) +
                 " #cdate " + cheque.Date +
                 " #cimg " + cheque.Img +
-                " #lid " + lienId +
                 " #from " + from +
                 " #uid " + uid +
                 " @" + to +

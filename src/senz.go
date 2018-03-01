@@ -167,15 +167,12 @@ func handling(senzie *Senzie, senz *Senz) {
             trans.ChequeId = cheque.Id
             trans.State = "TRANSFER"
 
-            // call finacle to hold the amount
-            lienId, err := lienAdd(trans.FromAcc, strconv.Itoa(trans.ChequeAmount))
+            // call vishwa to fund transfer
+            err := doFundTrans(trans.FromAcc, trans.ToAcc, strconv.Itoa(trans.ChequeAmount))
             if (err != nil) {
                 senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
                 return
             }
-
-            // we need to set lienId of the cheque
-            cheque.LienId = lienId
 
             // create cheque
             // create trans
@@ -188,7 +185,7 @@ func handling(senzie *Senzie, senz *Senz) {
             senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], cheque.Id.String(), cheque.BankId, senz.Sender)
 
             // forward cheque to toAcc
-            senzie.out <- chequeSenz(cheque, senz.Sender, senz.Attr["to"], uid(), lienId)
+            senzie.out <- chequeSenz(cheque, senz.Sender, senz.Attr["to"], uid())
         } else {
             // this mean already transfered cheque
             // check for double spend
@@ -203,21 +200,19 @@ func handling(senzie *Senzie, senz *Senz) {
                 } else {
                     // new trans
                     trans := senzToTrans(senz)
-                    trans.State = "DEPOSIT"
                     trans.ChequeId = cheque.Id
                     trans.ChequeImg = cheque.Img
+                    trans.State = "TRANSFER"
 
-                    // call finacle to release the amount
-                    err := lienMod(senz.Attr["from"], cheque.LienId)
-                    if(err != nil) {
+                    // call vishwa to fund transfer
+                    err := doFundTrans(trans.FromAcc, trans.ToAcc, strconv.Itoa(trans.ChequeAmount))
+                    if (err != nil) {
                         senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
                         return
                     }
 
                     // create trans
                     createTrans(trans)
-
-                    // TODO call finacle to transfer fund
 
                     // send success status back
                     senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], cId, "cbid", senz.Sender)

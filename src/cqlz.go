@@ -30,7 +30,6 @@ type Cheque struct {
     Date            string
     Img             string
     Originator      string
-    LienId          string
 }
 
 var Session *gocql.Session
@@ -135,12 +134,11 @@ func createCheque(cheque *Cheque) error {
             amount,
             date,
             img,
-            originator,
-            lien_id
+            originator
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?)
     `
-    err := Session.Query(q, cheque.BankId, cheque.Id, cheque.Amount, cheque.Date, cheque.Img, cheque.Originator, cheque.LienId).Exec()
+    err := Session.Query(q, cheque.BankId, cheque.Id, cheque.Amount, cheque.Date, cheque.Img, cheque.Originator).Exec()
 
     if err != nil {
         println(err.Error())
@@ -158,7 +156,7 @@ func getCheque(bankId string, cId string)(*Cheque, error) {
 
     m := map[string]interface{}{}
     q := `
-        SELECT bank, id, amount, date, img, originator, lien_id
+        SELECT bank, id, amount, date, img, originator
         FROM cheques
             WHERE bank = ?
             AND id = ?
@@ -173,7 +171,6 @@ func getCheque(bankId string, cId string)(*Cheque, error) {
         cheque.Date = m["date"].(string)
         cheque.Img = m["img"].(string)
         cheque.Originator = m["originator"].(string)
-        cheque.LienId = m["lien_id"].(string)
 
         return cheque, nil
     }
