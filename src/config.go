@@ -59,7 +59,7 @@ var finacleConfig = FinacleConfig {
 
 var vishwaConfig = VishwaConfig {
     api: getEnv("VISHWA_API", "https://uatweb.sampath.lk/SVRClientWeb/services/MobileServicesMain"),
-    fundTransAction: getEnv("FUND_TRANS_ACTION", "http://mobileServices.web.app.sampath.org/MobileServicesMain/doLoginRequest"),
+    fundTransAction: getEnv("FUND_TRANS_ACTION", "http://mobileServices.web.app.sampath.org/MobileServicesMain/initiateTransferRequest"),
 }
 
 func getEnv(key, fallback string) string {
