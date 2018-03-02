@@ -22,12 +22,6 @@ type CassandraConfig struct {
     consistancy string
 }
 
-type FinacleConfig struct {
-    api             string
-    lienAddAction   string
-    lienModAction   string
-}
-
 type VishwaConfig struct {
     api             string
     fundTransAction string
@@ -49,12 +43,6 @@ var cassandraConfig = CassandraConfig {
     port: getEnv("CASSANDRA_PORT", "9042"),
     keyspace: getEnv("CASSANDRA_KEYSPACE", "cchain"),
     consistancy: getEnv("CASSANDRA_CONSISTANCY", "ALL"),
-}
-
-var finacleConfig = FinacleConfig {
-    api: getEnv("FINACLE_API", "https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService"),
-    lienAddAction: getEnv("LIEN_ADD_ACTION", "https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService"),
-    lienModAction: getEnv("LIEN_MOD_ACTION", "https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService"),
 }
 
 var vishwaConfig = VishwaConfig {
