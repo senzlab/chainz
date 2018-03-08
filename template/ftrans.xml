@@ -1,0 +1,17 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:iib="http://www.sampath.lk/SD/IIBFinacleIntegration/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <iib:DoTransferRequest>
+         <APPCode>SVR</APPCode>
+         <Controller>CMN</Controller>
+         <CDCICode>C</CDCICode>
+         <FromAccountNo>{{.FromAcc}}</FromAccountNo>
+         <ToAccountNo>{{.ToAcc}}</ToAccountNo>
+         <DTxnAmount>{{.Amount}}</DTxnAmount>
+         <DCommAmount></DCommAmount>
+         <TransMemo>{{.Memo}}</TransMemo>
+         <ValueDate>{{.Date}}</ValueDate>
+         <FromCurrCode>LKR</FromCurrCode>
+      </iib:DoTransferRequest>
+   </soapenv:Body>
+</soapenv:Envelope>

@@ -1,0 +1,11 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:iib="http://www.sampath.lk/SD/IIBFinacleIntegration/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <iib:DoReversalRequest>
+         <TranID>?</TranID>
+         <FromAccountNo>?</FromAccountNo>
+         <ToAccountNo>?</ToAccountNo>
+         <DTxnAmount>?</DTxnAmount>
+      </iib:DoReversalRequest>
+   </soapenv:Body>
+</soapenv:Envelope>
