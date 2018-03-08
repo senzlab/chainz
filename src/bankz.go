@@ -11,10 +11,12 @@ import (
 )
 
 type FundTrans struct {
-    UserId string
     FromAcc string
     ToAcc string
     Amount string
+    Commission string
+    Memo string
+    Date string
 }
 
 func doFundTrans(fromAcc string, toAcc string, amount string)error {
@@ -28,14 +30,13 @@ func doFundTrans(fromAcc string, toAcc string, amount string)error {
     }
     println(reqXml)
 
-	req, err := http.NewRequest("POST", vishwaConfig.api, bytes.NewBuffer([]byte(reqXml)))
+	req, err := http.NewRequest("POST", transConfig.api, bytes.NewBuffer([]byte(reqXml)))
 	if err != nil {
         println(err.Error)
 		return err
 	}
 
     // headers
-	req.Header.Add("SOAPAction", vishwaConfig.fundTransAction)
 	req.Header.Add("Content-Type", "text/xml; charset=UTF-8")
 	req.Header.Add("Accept", "text/xml")
 
@@ -67,7 +68,7 @@ func doFundTrans(fromAcc string, toAcc string, amount string)error {
 func fundTransReq(fromAcc string, toAcc string, amount string)(string, error) {
     // format template path
     cwd, _ := os.Getwd()
-    tp := filepath.Join(cwd, "./template/fundtrans.xml")
+    tp := filepath.Join(cwd, "./template/ftrans.xml")
     println(tp)
 
     // template from file
@@ -77,12 +78,14 @@ func fundTransReq(fromAcc string, toAcc string, amount string)(string, error) {
         return "", err
     }
 
-    // lienadd params
+    // trans params
     ft := FundTrans{}
-    ft.UserId = fromAcc
     ft.FromAcc = fromAcc
     ft.ToAcc = toAcc
     ft.Amount = amount
+    ft.Commission = transConfig.commission
+    ft.Memo = ""
+    ft.Date = ""
 
     // parse template
     var buf bytes.Buffer

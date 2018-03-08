@@ -167,7 +167,7 @@ func handling(senzie *Senzie, senz *Senz) {
             trans.ChequeId = cheque.Id
             trans.State = "TRANSFER"
 
-            // call vishwa to fund transfer
+            // call finacle to fund transfer
             err := doFundTrans(trans.FromAcc, trans.ToAcc, strconv.Itoa(trans.ChequeAmount))
             if (err != nil) {
                 senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
@@ -204,7 +204,7 @@ func handling(senzie *Senzie, senz *Senz) {
                     trans.ChequeImg = cheque.Img
                     trans.State = "TRANSFER"
 
-                    // call vishwa to fund transfer
+                    // call finacle to fund transfer
                     err := doFundTrans(trans.FromAcc, trans.ToAcc, strconv.Itoa(trans.ChequeAmount))
                     if (err != nil) {
                         senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)

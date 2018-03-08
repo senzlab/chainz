@@ -22,9 +22,11 @@ type CassandraConfig struct {
     consistancy string
 }
 
-type VishwaConfig struct {
-    api             string
-    fundTransAction string
+type TransConfig struct {
+    api         string
+    action      string
+    commission  string
+    account     string
 }
 
 var config = Config {
@@ -45,9 +47,11 @@ var cassandraConfig = CassandraConfig {
     consistancy: getEnv("CASSANDRA_CONSISTANCY", "ALL"),
 }
 
-var vishwaConfig = VishwaConfig {
-    api: getEnv("VISHWA_API", "https://uatweb.sampath.lk/SVRClientWeb/services/MobileServicesMain"),
-    fundTransAction: getEnv("FUND_TRANS_ACTION", "http://mobileServices.web.app.sampath.org/MobileServicesMain/initiateTransferRequest"),
+var transConfig = TransConfig {
+    api: getEnv("TRANS_API", "https://uatweb.sampath.lk/SVRClientWeb/services/MobileServicesMain"),
+    action: getEnv("TRANS_ACTION", "http://mobileServices.web.app.sampath.org/MobileServicesMain/initiateTransferRequest"),
+    commission: getEnv("TRANS_COMMISSION", "20"),
+    account: getEnv("TRANS_ACCOUNT", "231233223344"),
 }
 
 func getEnv(key, fallback string) string {

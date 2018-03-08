@@ -8,7 +8,7 @@
          <FromAccountNo>{{.FromAcc}}</FromAccountNo>
          <ToAccountNo>{{.ToAcc}}</ToAccountNo>
          <DTxnAmount>{{.Amount}}</DTxnAmount>
-         <DCommAmount></DCommAmount>
+         <DCommAmount>{{.Commission}}</DCommAmount>
          <TransMemo>{{.Memo}}</TransMemo>
          <ValueDate>{{.Date}}</ValueDate>
          <FromCurrCode>LKR</FromCurrCode>
