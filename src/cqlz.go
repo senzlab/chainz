@@ -9,27 +9,31 @@ import (
 )
 
 type Trans struct {
-	BankId       string
-	Id           gocql.UUID
-	ChequeBankId string
-	ChequeId     gocql.UUID
-	ChequeAmount int
-	ChequeDate   string
-	ChequeImg    string
-	FromAcc      string
-	ToAcc        string
-	Timestamp    int64
-	Digsig       string
-	State        string
+	Bank          string
+	Id            gocql.UUID
+	PromizeBank   string
+	PromizeId     gocql.UUID
+	PromizeAmount string
+	PromizeBlob   string
+	FromZaddress  string
+	FromBank      string
+	FromAccount   string
+	ToZaddress    string
+	ToBank        string
+	ToAccount     string
+	Timestamp     int64
+	Digsig        string
+	Type          string
 }
 
-type Cheque struct {
-	BankId     string
-	Id         gocql.UUID
-	Amount     int
-	Date       string
-	Img        string
-	Originator string
+type Promize struct {
+	Bank           string
+	Id             gocql.UUID
+	Amount         string
+	Blob           string
+	OriginZaddress string
+	OriginBank     string
+	OriginAccount  string
 }
 
 var Session *gocql.Session
@@ -75,19 +79,37 @@ func createTrans(trans *Trans) error {
 		q := "INSERT INTO " + table + ` (
                 bank,
                 id,
-                cheque_bank,
-                cheque_id,
-                cheque_amount,
-                cheque_date,
-                cheque_img,
-                from_acc,
-                to_acc,
+                promize_bank,
+                promize_id,
+                promize_amount,
+                promize_blob,
+                from_zaddress,
+                from_bank,
+                from_account,
+                to_zaddress,
+                to_bank,
+                to_account,
                 timestamp,
                 digsig,
-                state
+                type
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-		err := Session.Query(q, trans.BankId, trans.Id, trans.ChequeBankId, trans.ChequeId, trans.ChequeAmount, trans.ChequeDate, trans.ChequeImg, trans.FromAcc, trans.ToAcc, trans.Timestamp, trans.Digsig, trans.State).Exec()
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		err := Session.Query(q,
+			trans.Bank,
+			trans.Id,
+			trans.PromizeBank,
+			trans.PromizeId,
+			trans.PromizeAmount,
+			trans.PromizeBlob,
+			trans.FromZaddress,
+			trans.FromBank,
+			trans.FromAccount,
+			trans.ToZaddress,
+			trans.ToBank,
+			trans.ToAccount,
+			trans.Timestamp,
+			trans.Digsig,
+			trans.Type).Exec()
 		if err != nil {
 			println(err.Error())
 		}
@@ -126,19 +148,27 @@ func updateTrans(state string, bank string, id string) error {
 	return nil
 }
 
-func createCheque(cheque *Cheque) error {
+func createPromize(promize *Promize) error {
 	q := `
-        INSERT INTO cheques (
+        INSERT INTO promizes (
             bank,
             id,
             amount,
-            date,
-            img,
-            originator
+            blob,
+            origin_zaddress,
+			origin_bank,
+			origin_account
         )
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     `
-	err := Session.Query(q, cheque.BankId, cheque.Id, cheque.Amount, cheque.Date, cheque.Img, cheque.Originator).Exec()
+	err := Session.Query(q,
+		promize.Bank,
+		promize.Id,
+		promize.Amount,
+		promize.Blob,
+		promize.OriginZaddress,
+		promize.OriginBank,
+		promize.OriginAccount).Exec()
 
 	if err != nil {
 		println(err.Error())
@@ -147,8 +177,8 @@ func createCheque(cheque *Cheque) error {
 	return err
 }
 
-func getCheque(bankId string, cId string) (*Cheque, error) {
-	uuid, err := gocql.ParseUUID(cId)
+func getPromize(bank string, id string) (*Promize, error) {
+	uuid, err := gocql.ParseUUID(id)
 	if err != nil {
 		println(err.Error)
 		return nil, err
@@ -156,29 +186,30 @@ func getCheque(bankId string, cId string) (*Cheque, error) {
 
 	m := map[string]interface{}{}
 	q := `
-        SELECT bank, id, amount, date, img, originator
-        FROM cheques
+        SELECT bank, id, amount, blob, origin_zaddress, origin_bank, origin_account
+        FROM promizes
             WHERE bank = ?
             AND id = ?
         LIMIT 1
     `
-	itr := Session.Query(q, bankId, uuid).Consistency(gocql.One).Iter()
+	itr := Session.Query(q, bank, uuid).Consistency(gocql.One).Iter()
 	for itr.MapScan(m) {
-		cheque := &Cheque{}
-		cheque.BankId = m["bank"].(string)
-		cheque.Id = m["id"].(gocql.UUID)
-		cheque.Amount = m["amount"].(int)
-		cheque.Date = m["date"].(string)
-		cheque.Img = m["img"].(string)
-		cheque.Originator = m["originator"].(string)
+		promize := &Promize{}
+		promize.Bank = m["bank"].(string)
+		promize.Id = m["id"].(gocql.UUID)
+		promize.Amount = m["amount"].(string)
+		promize.Blob = m["blob"].(string)
+		promize.OriginZaddress = m["origin_zaddress"].(string)
+		promize.OriginBank = m["origin_bank"].(string)
+		promize.OriginAccount = m["origin_account"].(string)
 
-		return cheque, nil
+		return promize, nil
 	}
 
-	return nil, errors.New("Not found cheque")
+	return nil, errors.New("Not found promize")
 }
 
-func isDoubleSpend(from string, to string, cid string) bool {
+func isDoubleSpend(from string, cid string) bool {
 	// parse cid and get uuid
 	uuid, err := gocql.ParseUUID(cid)
 	if err != nil {
@@ -189,24 +220,12 @@ func isDoubleSpend(from string, to string, cid string) bool {
 	m := map[string]interface{}{}
 	q := `
         SELECT id FROM trans
-            WHERE from_acc=?
-            AND cheque_id=?
+            WHERE from_zaddress=?
+            AND promize_id=?
         LIMIT 1
         ALLOW FILTERING
     `
 	itr := Session.Query(q, from, uuid).Consistency(gocql.One).Iter()
-	for itr.MapScan(m) {
-		return true
-	}
-
-	q = `
-        SELECT id FROM trans
-            WHERE to_acc=?
-            AND cheque_id=?
-        LIMIT 1
-        ALLOW FILTERING
-    `
-	itr = Session.Query(q, to, uuid).Consistency(gocql.One).Iter()
 	for itr.MapScan(m) {
 		return true
 	}

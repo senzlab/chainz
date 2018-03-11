@@ -74,28 +74,29 @@ func timestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
-func senzToCheque(senz *Senz) *Cheque {
-	cheque := &Cheque{}
-	cheque.BankId = senz.Attr["cbnk"]
-	cheque.Id = uuid()
-	cheque.Amount = 1000
-	cheque.Date = senz.Attr["cdate"]
-	cheque.Img = senz.Attr["cimg"]
-	cheque.Originator = senz.Sender
+func senzToPromize(senz *Senz) *Promize {
+	promize := &Promize{}
+	promize.Bank = config.senzieName
+	promize.Id = uuid()
+	promize.Amount = senz.Attr["amnt"]
+	promize.Blob = senz.Attr["blob"]
+	promize.OriginZaddress = senz.Sender
+	promize.OriginBank = senz.Attr["bnk"]
+	promize.OriginAccount = senz.Attr["acc"]
 
-	return cheque
+	return promize
 }
 
-func senzToTrans(senz *Senz) *Trans {
+func senzToTrans(senz *Senz, promize *Promize) *Trans {
 	trans := &Trans{}
-	trans.BankId = config.senzieName
+	trans.Bank = config.senzieName
 	trans.Id = uuid()
-	trans.ChequeBankId = senz.Attr["cbnk"]
-	trans.ChequeAmount = 1000
-	trans.ChequeDate = senz.Attr["cdate"]
-	trans.ChequeImg = senz.Attr["cimg"]
-	trans.FromAcc = senz.Sender
-	trans.ToAcc = senz.Attr["to"]
+	trans.PromizeBank = promize.Bank
+	trans.PromizeId = promize.Id
+	trans.PromizeAmount = promize.Amount
+	trans.PromizeBlob = promize.Blob
+	trans.FromZaddress = senz.Sender
+	trans.ToZaddress = senz.Attr["to"]
 	trans.Digsig = senz.Digsig
 
 	return trans
@@ -120,10 +121,10 @@ func awaSenz(uid string) string {
 	return z + " " + s
 }
 
-func statusSenz(status string, uid string, cid string, cbnk string, to string) string {
+func statusSenz(status string, uid string, id string, bnk string, to string) string {
 	z := "DATA #status " + status +
-		" #cid " + cid +
-		" #cbnk " + cbnk +
+		" #bnk " + bnk +
+		" #id " + id +
 		" #uid " + uid +
 		" @" + to +
 		" ^" + config.senzieName
@@ -132,13 +133,11 @@ func statusSenz(status string, uid string, cid string, cbnk string, to string) s
 	return z + " " + s
 }
 
-func chequeSenz(cheque *Cheque, from string, to string, uid string) string {
-	z := "SHARE #cbnk " + cheque.BankId +
-		" #cid " + cheque.Id.String() +
-		" #cbnk " + cheque.BankId +
-		" #camnt " + strconv.Itoa(cheque.Amount) +
-		" #cdate " + cheque.Date +
-		" #cimg " + cheque.Img +
+func promizeSenz(promize *Promize, from string, to string, uid string) string {
+	z := "SHARE #bnk " + promize.Bank +
+		" #id " + promize.Id.String() +
+		" #amnt " + promize.Amount +
+		" #blob " + promize.Blob +
 		" #from " + from +
 		" #uid " + uid +
 		" @" + to +

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strconv"
 )
 
 type Senzie struct {
@@ -158,55 +157,58 @@ func handling(senzie *Senzie, senz *Senz) {
 		// frist send AWA back
 		senzie.out <- awaSenz(senz.Attr["uid"])
 
-		if cId, ok := senz.Attr["cid"]; !ok {
+		if id, ok := senz.Attr["id"]; !ok {
 			// this means new cheque
 			// and new trans
-			cheque := senzToCheque(senz)
-			trans := senzToTrans(senz)
-			trans.ChequeId = cheque.Id
-			trans.State = "TRANSFER"
+			promize := senzToPromize(senz)
+			trans := senzToTrans(senz, promize)
+			trans.FromBank = senz.Attr["bnk"]
+			trans.FromAccount = senz.Attr["acc"]
+			trans.ToAccount = transConfig.account
+			trans.Type = "TRANSFER"
 
 			// call finacle to fund transfer
-			err := doFundTrans(trans.FromAcc, trans.ToAcc, strconv.Itoa(trans.ChequeAmount))
+			err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount)
 			if err != nil {
-				senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
+				senzie.out <- statusSenz("ERROR", senz.Attr["uid"], id, "cbid", senz.Sender)
 				return
 			}
 
 			// create cheque
 			// create trans
-			createCheque(cheque)
+			createPromize(promize)
 			createTrans(trans)
 
 			// TODO handle create failures
 
 			// send status back to fromAcc
-			senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], cheque.Id.String(), cheque.BankId, senz.Sender)
+			senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], promize.Id.String(), promize.Bank, senz.Sender)
 
 			// forward cheque to toAcc
-			senzie.out <- chequeSenz(cheque, senz.Sender, senz.Attr["to"], uid())
+			senzie.out <- promizeSenz(promize, senz.Sender, senz.Attr["to"], uid())
 		} else {
 			// this mean already transfered cheque
 			// check for double spend
-			if isDoubleSpend(senz.Sender, senz.Attr["to"], cId) {
+			if isDoubleSpend(senz.Sender, id) {
 				// send error status back
-				senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
+				senzie.out <- statusSenz("ERROR", senz.Attr["uid"], id, "cbid", senz.Sender)
 			} else {
 				// get cheque first
-				cheque, err := getCheque(senz.Attr["cbnk"], cId)
+				promize, err := getPromize(senz.Attr["bnk"], id)
 				if err != nil {
-					senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
+					senzie.out <- statusSenz("ERROR", senz.Attr["uid"], id, "cbid", senz.Sender)
 				} else {
 					// new trans
-					trans := senzToTrans(senz)
-					trans.ChequeId = cheque.Id
-					trans.ChequeImg = cheque.Img
-					trans.State = "TRANSFER"
+					trans := senzToTrans(senz, promize)
+					trans.FromAccount = transConfig.account
+					trans.ToBank = senz.Attr["bnk"]
+					trans.ToAccount = senz.Attr["acc"]
+					trans.Type = "REDEEM"
 
 					// call finacle to fund transfer
-					err := doFundTrans(trans.FromAcc, trans.ToAcc, strconv.Itoa(trans.ChequeAmount))
+					err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount)
 					if err != nil {
-						senzie.out <- statusSenz("ERROR", senz.Attr["uid"], cId, "cbid", senz.Sender)
+						senzie.out <- statusSenz("ERROR", senz.Attr["uid"], id, "cbid", senz.Sender)
 						return
 					}
 
@@ -214,7 +216,7 @@ func handling(senzie *Senzie, senz *Senz) {
 					createTrans(trans)
 
 					// send success status back
-					senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], cId, "cbid", senz.Sender)
+					senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], id, "cbid", senz.Sender)
 				}
 			}
 		}
