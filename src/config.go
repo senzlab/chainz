@@ -48,10 +48,10 @@ var cassandraConfig = CassandraConfig{
 }
 
 var transConfig = TransConfig{
-	api:        getEnv("TRANS_API", "https://uatweb.sampath.lk/SVRClientWeb/services/MobileServicesMain"),
-	action:     getEnv("TRANS_ACTION", "http://mobileServices.web.app.sampath.org/MobileServicesMain/initiateTransferRequest"),
+	api:        getEnv("TRANS_API", "http://192.168.125.93:7800/sd/iib/IIBFinacleIntegration"),
+	action:     getEnv("TRANS_ACTION", "http://192.168.125.93:7800/sd/iib/iibfinacleintegration"),
 	commission: getEnv("TRANS_COMMISSION", "20"),
-	account:    getEnv("TRANS_ACCOUNT", "231233223344"),
+	account:    getEnv("TRANS_ACCOUNT", "900010000801"),
 }
 
 func getEnv(key, fallback string) string {

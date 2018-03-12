@@ -28,10 +28,12 @@ func doFundTrans(fromAcc string, toAcc string, amount string) error {
 		println(err.Error)
 		return err
 	}
+	println(transConfig.api)
 	println(reqXml)
 
 	req, err := http.NewRequest("POST", transConfig.api, bytes.NewBuffer([]byte(reqXml)))
 	if err != nil {
+		println("error create request")
 		println(err.Error)
 		return err
 	}
@@ -43,6 +45,7 @@ func doFundTrans(fromAcc string, toAcc string, amount string) error {
 	// send request
 	resp, err := client.Do(req)
 	if err != nil {
+		println("error call request")
 		println(err.Error)
 		return err
 	}
