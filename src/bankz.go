@@ -31,6 +31,9 @@ func doFundTrans(fromAcc string, toAcc string, amount string) error {
 	println(transConfig.api)
 	println(reqXml)
 
+	// TODO remove this
+	return nil
+
 	req, err := http.NewRequest("POST", transConfig.api, bytes.NewBuffer([]byte(reqXml)))
 	if err != nil {
 		println("error create request")
