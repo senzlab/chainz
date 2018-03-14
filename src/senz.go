@@ -30,7 +30,7 @@ type Senz struct {
 // buffer size
 const bufSize = 64 * 1024
 
-func main() {
+func m() {
 	// first init key pair
 	setUpKeys()
 

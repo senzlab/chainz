@@ -32,6 +32,9 @@ WORKDIR /app
 # build
 RUN go build -o build/senz src/*.go
 
+# server running port
+EXPOSE 7070
+
 # .keys volume
 VOLUME ["/app/.keys"]
 
