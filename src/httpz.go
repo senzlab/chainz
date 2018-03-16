@@ -42,6 +42,17 @@ func promize(w http.ResponseWriter, r *http.Request) {
 
 	println(string(b))
 
+	// read headers
+	rIp := r.Header.Get("X-Real-IP")
+	fIp := r.Header.Get("X-Forwarded-For")
+	verified := r.Header.Get("VERIFIED")
+	dn := r.Header.Get("DN")
+
+	println(rIp)
+	println(fIp)
+	println(verified)
+	println(dn)
+
 	// unmarshel json
 	var senzMsg SenzMsg
 	err = json.Unmarshal(b, &senzMsg)
@@ -83,7 +94,7 @@ func promize(w http.ResponseWriter, r *http.Request) {
 
 			// TODO handle create failures
 
-			// msg to sender
+			// msg to #from
 			fMsg := SenzMsg{
 				Uid: senz.Attr["uid"],
 				Msg: statusSenz("SUCCESS", senz.Attr["uid"], "id", "sampath", senz.Sender),
@@ -169,7 +180,13 @@ func promize(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		http.Error(w, "", 405)
+		// marshel and return error
+		senzMsg := SenzMsg{
+			Uid: "",
+			Msg: statusSenz("ERROR", "", "", "", ""),
+		}
+		j, _ := json.Marshal(senzMsg)
+		http.Error(w, string(j), 405)
 		return
 	}
 }
