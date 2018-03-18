@@ -4,6 +4,7 @@ MAINTAINER Eranga Bandara (erangaeb@gmail.com)
 
 # install dependencies
 RUN go get github.com/gocql/gocql
+RUN	go get github.com/gorilla/mux
 
 # env
 ENV SWITCH_NAME senzswitch

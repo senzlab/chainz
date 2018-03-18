@@ -29,6 +29,11 @@ type TransConfig struct {
 	account    string
 }
 
+type AuthConfig struct {
+	api    string
+	action string
+}
+
 var config = Config{
 	switchName: getEnv("SWITCH_NAME", "senzswitch"),
 	switchHost: getEnv("SWITCH_HOST", "www.rahasak.com"),
@@ -52,6 +57,11 @@ var transConfig = TransConfig{
 	action:     getEnv("TRANS_ACTION", "http://192.168.125.93:7800/sd/iib/iibfinacleintegration"),
 	commission: getEnv("TRANS_COMMISSION", "20"),
 	account:    getEnv("TRANS_ACCOUNT", "900010000801"),
+}
+
+var authConfig = AuthConfig{
+	api:    getEnv("AUTH_API", "https://uatweb.sampath.lk/SVRClientWeb/services/MobileServicesMain"),
+	action: getEnv("AUTH_ACTION", "http://mobileServices.web.app.sampath.org/MobileServicesMain/doLoginRequest"),
 }
 
 func getEnv(key, fallback string) string {

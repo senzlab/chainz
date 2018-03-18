@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -20,11 +21,13 @@ func main() {
 	// init cassandra session
 	initCStarSession()
 
-	http.HandleFunc("/promize", promize)
-	address := ":7070"
-	println("starting server on address" + address)
+	// router
+	r := mux.NewRouter()
+	r.HandleFunc("/promizes", promize).Methods("POST")
+	r.HandleFunc("/users", userz).Methods("POST")
 
-	err := http.ListenAndServe(address, nil)
+	// start server
+	err := http.ListenAndServe(":7070", r)
 	if err != nil {
 		println(err.Error)
 		os.Exit(1)
@@ -33,160 +36,223 @@ func main() {
 
 func promize(w http.ResponseWriter, r *http.Request) {
 	// read body
-	b, err := ioutil.ReadAll(r.Body)
+	b, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
 
 	println(string(b))
 
-	// read headers
-	rIp := r.Header.Get("X-Real-IP")
-	fIp := r.Header.Get("X-Forwarded-For")
-	verified := r.Header.Get("VERIFIED")
-	dn := r.Header.Get("DN")
-
-	println(rIp)
-	println(fIp)
-	println(verified)
-	println(dn)
-
 	// unmarshel json
 	var senzMsg SenzMsg
-	err = json.Unmarshal(b, &senzMsg)
-	if err != nil {
-		resp := statusSenz("ERROR", "uid", "id", "cbid", "sender")
-		http.Error(w, resp, 400)
-		return
-	}
+	json.Unmarshal(b, &senzMsg)
 
 	// handle senz
 	senz := parse(senzMsg.Msg)
-	if senz.Ztype == "SHARE" {
-		if id, ok := senz.Attr["id"]; !ok {
-			// this means new cheque
-			// and new trans
-			promize := senzToPromize(&senz)
-			trans := senzToTrans(&senz, promize)
-			trans.FromBank = senz.Attr["bnk"]
-			trans.FromAccount = senz.Attr["acc"]
-			trans.ToAccount = transConfig.account
-			trans.Type = "TRANSFER"
+	if id, ok := senz.Attr["id"]; !ok {
+		// this means new cheque
+		// and new trans
+		promize := senzToPromize(&senz)
+		trans := senzToTrans(&senz, promize)
+		trans.FromBank = senz.Attr["bnk"]
+		trans.FromAccount = senz.Attr["acc"]
+		trans.ToAccount = transConfig.account
+		trans.Type = "TRANSFER"
 
-			// call finacle to fund transfer
-			err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount)
-			if err != nil {
-				// marshel and return error
-				senzMsg := SenzMsg{
-					Uid: senz.Attr["uid"],
-					Msg: statusSenz("ERROR", senz.Attr["uid"], id, "cbid", senz.Sender),
-				}
-				j, _ := json.Marshal(senzMsg)
-				http.Error(w, string(j), 400)
-			}
-
-			// create cheque
-			// create trans
-			createPromize(promize)
-			createTrans(trans)
-
-			// TODO handle create failures
-
-			// msg to #from
-			fMsg := SenzMsg{
-				Uid: senz.Attr["uid"],
-				Msg: statusSenz("SUCCESS", senz.Attr["uid"], "id", "sampath", senz.Sender),
-			}
-
-			// message for #to
-			tMsg := SenzMsg{
-				Uid: senz.Attr["uid"],
-				Msg: promizeSenz(promize, senz.Sender, senz.Attr["to"], uid()),
-			}
-
-			// marshel and return response(forward chque to toAcc senz)
-			var zmsgs []SenzMsg
-			zmsgs = append(zmsgs, fMsg)
-			zmsgs = append(zmsgs, tMsg)
-			j, _ := json.Marshal(zmsgs)
-			w.WriteHeader(http.StatusCreated)
-			w.Header().Set("Content-Type", "application/json")
-			io.WriteString(w, string(j))
-		} else {
-			// this mean already transfered cheque
-			// check for double spend
-			if isDoubleSpend(senz.Sender, id) {
-				// marshel and return error
-				senzMsg := SenzMsg{
-					Uid: senz.Attr["uid"],
-					Msg: statusSenz("ERROR", senz.Attr["uid"], id, "cbid", senz.Sender),
-				}
-				j, _ := json.Marshal(senzMsg)
-				http.Error(w, string(j), 400)
-				return
-			} else {
-				// get cheque first
-				promize, err := getPromize(senz.Attr["bnk"], id)
-				if err != nil {
-					// marshel and return error
-					senzMsg := SenzMsg{
-						Uid: senz.Attr["uid"],
-						Msg: statusSenz("ERROR", senz.Attr["uid"], id, "cbid", senz.Sender),
-					}
-					j, _ := json.Marshal(senzMsg)
-					http.Error(w, string(j), 404)
-					return
-				} else {
-					// new trans
-					trans := senzToTrans(&senz, promize)
-					trans.FromAccount = transConfig.account
-					trans.ToBank = senz.Attr["bnk"]
-					trans.ToAccount = senz.Attr["acc"]
-					trans.Type = "REDEEM"
-
-					// call finacle to fund transfer
-					err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount)
-					if err != nil {
-						// marshel and return error
-						senzMsg := SenzMsg{
-							Uid: senz.Attr["uid"],
-							Msg: statusSenz("ERROR", senz.Attr["uid"], id, "cbid", senz.Sender),
-						}
-						j, _ := json.Marshal(senzMsg)
-						http.Error(w, string(j), 403)
-						return
-					}
-
-					// create trans
-					createTrans(trans)
-
-					// status to sender
-					zmsg := SenzMsg{
-						Uid: senz.Attr["uid"],
-						Msg: statusSenz("SUCCESS", senz.Attr["uid"], id, "cbid", senz.Sender),
-					}
-
-					// marshel and return response(success response to sender)
-					var zmsgs []SenzMsg
-					zmsgs = append(zmsgs, zmsg)
-					j, _ := json.Marshal(zmsgs)
-					w.WriteHeader(http.StatusCreated)
-					w.Header().Set("Content-Type", "application/json")
-					io.WriteString(w, string(j))
-					return
-				}
-			}
+		// call finacle to fund transfer
+		err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount)
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
 		}
+
+		// create cheque
+		// create trans
+		createPromize(promize)
+		createTrans(trans)
+
+		// TODO handle create failures
+
+		// msg to #from
+		// message for #to
+		fMsg := SenzMsg{
+			Uid: senz.Attr["uid"],
+			Msg: statusSenz("SUCCESS", senz.Attr["uid"], senz.Sender),
+		}
+		tMsg := SenzMsg{
+			Uid: senz.Attr["uid"],
+			Msg: promizeSenz(promize, senz.Sender, senz.Attr["to"], uid()),
+		}
+
+		// msgs
+		var zmsgs []SenzMsg
+		zmsgs = append(zmsgs, fMsg)
+		zmsgs = append(zmsgs, tMsg)
+
+		// success response
+		successResponse(w, zmsgs)
+		return
 	} else {
-		// marshel and return error
-		senzMsg := SenzMsg{
-			Uid: "",
-			Msg: statusSenz("ERROR", "", "", "", ""),
+		// this mean already transfered cheque
+		// check for double spend
+		if isDoubleSpend(senz.Sender, id) {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
 		}
-		j, _ := json.Marshal(senzMsg)
-		http.Error(w, string(j), 405)
+
+		// get cheque first
+		promize, err := getPromize(senz.Attr["bnk"], id)
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
+		}
+
+		// new trans
+		trans := senzToTrans(&senz, promize)
+		trans.FromAccount = transConfig.account
+		trans.ToBank = senz.Attr["bnk"]
+		trans.ToAccount = senz.Attr["acc"]
+		trans.Type = "REDEEM"
+
+		// call finacle to fund transfer
+		err = doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount)
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
+		}
+
+		// create trans
+		createTrans(trans)
+
+		// status to sender
+		zmsg := SenzMsg{
+			Uid: senz.Attr["uid"],
+			Msg: statusSenz("SUCCESS", senz.Attr["uid"], senz.Sender),
+		}
+
+		// msgs
+		var zmsgs []SenzMsg
+		zmsgs = append(zmsgs, zmsg)
+
+		// success response
+		successResponse(w, zmsgs)
 		return
 	}
+}
+
+func userz(w http.ResponseWriter, r *http.Request) {
+	// read body
+	b, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	println(string(b))
+
+	// unmarshel json
+	var senzMsg SenzMsg
+	json.Unmarshal(b, &senzMsg)
+
+	// handle senz
+	senz := parse(senzMsg.Msg)
+	if _, ok := senz.Attr["pubkey"]; ok {
+		// create user
+		user := senzToUser(&senz)
+		err := createUser(user)
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
+		}
+
+		// success response
+		zmsg := SenzMsg{
+			Uid: senz.Attr["uid"],
+			Msg: statusSenz("SUCCESS", senz.Attr["uid"], senz.Sender),
+		}
+		var zmsgs []SenzMsg
+		zmsgs = append(zmsgs, zmsg)
+
+		// success response back
+		successResponse(w, zmsgs)
+		return
+	}
+
+	if acc, ok := senz.Attr["acc"]; ok {
+		// add account
+		// generate salt amount
+		salt := randomSalt()
+
+		// fund transfer salt amount
+		err := doFundTrans(acc, transConfig.account, salt)
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
+		}
+
+		// save salt
+		// save account
+		setUserSalt(salt, senz.Sender)
+		setUserAccount(acc, senz.Sender)
+
+		// return success response
+		zmsg := SenzMsg{
+			Uid: senz.Attr["uid"],
+			Msg: statusSenz("SUCCESS", senz.Attr["uid"], senz.Sender),
+		}
+		var zmsgs []SenzMsg
+		zmsgs = append(zmsgs, zmsg)
+
+		// success response back
+		successResponse(w, zmsgs)
+		return
+	}
+
+	if salt, ok := senz.Attr["salt"]; ok {
+		// confirm salt
+		// get user and compare salt
+		user, err := getUser(senz.Sender)
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
+		}
+		if user.Salt != salt {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
+		}
+
+		// fund transfer salt amount
+		err = doFundTrans(transConfig.account, user.Account, salt)
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
+		}
+
+		// set state
+		setUserState("VERIFIED", senz.Sender)
+
+		// return success response
+		zmsg := SenzMsg{
+			Uid: senz.Attr["uid"],
+			Msg: statusSenz("SUCCESS", senz.Attr["uid"], senz.Sender),
+		}
+		var zmsgs []SenzMsg
+		zmsgs = append(zmsgs, zmsg)
+
+		// success response back
+		successResponse(w, zmsgs)
+		return
+	}
+}
+
+func errorResponse(w http.ResponseWriter, uid string, to string) {
+	// marshel and return error
+	senzMsg := SenzMsg{
+		Uid: uid,
+		Msg: statusSenz("ERROR", uid, to),
+	}
+	j, _ := json.Marshal(senzMsg)
+	http.Error(w, string(j), 400)
+}
+
+func successResponse(w http.ResponseWriter, zmsgs []SenzMsg) {
+	j, _ := json.Marshal(zmsgs)
+	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+	io.WriteString(w, string(j))
 }

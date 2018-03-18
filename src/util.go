@@ -74,6 +74,10 @@ func timestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
+func randomSalt() string {
+	return "1.24"
+}
+
 func senzToPromize(senz *Senz) *Promize {
 	promize := &Promize{}
 	promize.Bank = config.senzieName
@@ -102,6 +106,16 @@ func senzToTrans(senz *Senz, promize *Promize) *Trans {
 	return trans
 }
 
+func senzToUser(senz *Senz) *User {
+	user := &User{}
+	user.Zaddress = senz.Sender
+	user.Bank = senz.Attr["bank"]
+	user.Account = senz.Attr["account"]
+	user.PublicKey = senz.Attr["pubkey"]
+
+	return user
+}
+
 func regSenz() string {
 	z := "SHARE #pubkey " + getIdRsaPubStr() +
 		" #uid " + uid() +
@@ -121,10 +135,8 @@ func awaSenz(uid string) string {
 	return z + " " + s
 }
 
-func statusSenz(status string, uid string, id string, bnk string, to string) string {
+func statusSenz(status string, uid string, to string) string {
 	z := "DATA #status " + status +
-		" #bnk " + bnk +
-		" #id " + id +
 		" #uid " + uid +
 		" @" + to +
 		" ^" + config.senzieName

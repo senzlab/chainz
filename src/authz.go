@@ -10,31 +10,27 @@ import (
 	"text/template"
 )
 
-type FundTrans struct {
-	FromAcc    string
-	ToAcc      string
-	Amount     string
-	Commission string
-	Memo       string
-	Date       string
+type AuthParam struct {
+	Username string
+	Password string
 }
 
-func doFundTrans(fromAcc string, toAcc string, amount string) error {
+func doAuth(user *User) error {
 	client := &http.Client{}
 
 	// request with xml soap data
-	reqXml, err := fundTransReq(fromAcc, toAcc, amount)
+	reqXml, err := authReq(user)
 	if err != nil {
 		println(err.Error)
 		return err
 	}
-	println(transConfig.api)
+	println(authConfig.api)
 	println(reqXml)
 
 	// TODO remove this
-	return nil
+	//return nil
 
-	req, err := http.NewRequest("POST", transConfig.api, bytes.NewBuffer([]byte(reqXml)))
+	req, err := http.NewRequest("POST", authConfig.api, bytes.NewBuffer([]byte(reqXml)))
 	if err != nil {
 		println("error create request")
 		println(err.Error)
@@ -44,6 +40,7 @@ func doFundTrans(fromAcc string, toAcc string, amount string) error {
 	// headers
 	req.Header.Add("Content-Type", "text/xml; charset=UTF-8")
 	req.Header.Add("Accept", "text/xml")
+	req.Header.Add("SOAPAction", authConfig.action)
 
 	// send request
 	resp, err := client.Do(req)
@@ -71,10 +68,10 @@ func doFundTrans(fromAcc string, toAcc string, amount string) error {
 	return nil
 }
 
-func fundTransReq(fromAcc string, toAcc string, amount string) (string, error) {
+func authReq(user *User) (string, error) {
 	// format template path
 	cwd, _ := os.Getwd()
-	tp := filepath.Join(cwd, "./template/trans.xml")
+	tp := filepath.Join(cwd, "./template/auth.xml")
 	println(tp)
 
 	// template from file
@@ -84,18 +81,14 @@ func fundTransReq(fromAcc string, toAcc string, amount string) (string, error) {
 		return "", err
 	}
 
-	// trans params
-	ft := FundTrans{}
-	ft.FromAcc = fromAcc
-	ft.ToAcc = toAcc
-	ft.Amount = amount
-	ft.Commission = transConfig.commission
-	ft.Memo = ""
-	ft.Date = ""
+	// auth param
+	authParam := AuthParam{}
+	authParam.Username = "eranga"
+	authParam.Password = "1234"
 
 	// parse template
 	var buf bytes.Buffer
-	err = t.Execute(&buf, ft)
+	err = t.Execute(&buf, authParam)
 	if err != nil {
 		println(err.Error())
 		return "", err

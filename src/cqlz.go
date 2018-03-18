@@ -36,6 +36,15 @@ type Promize struct {
 	OriginAccount  string
 }
 
+type User struct {
+	Zaddress  string
+	Bank      string
+	Account   string
+	Salt      string // random debit amount
+	PublicKey string
+	State     string
+}
+
 var Session *gocql.Session
 
 func initCStarSession() {
@@ -148,6 +157,30 @@ func updateTrans(state string, bank string, id string) error {
 	return nil
 }
 
+func isDoubleSpend(from string, cid string) bool {
+	// parse cid and get uuid
+	uuid, err := gocql.ParseUUID(cid)
+	if err != nil {
+		println(err.Error)
+		return true
+	}
+
+	m := map[string]interface{}{}
+	q := `
+        SELECT id FROM trans
+            WHERE from_zaddress=?
+            AND promize_id=?
+        LIMIT 1
+        ALLOW FILTERING
+    `
+	itr := Session.Query(q, from, uuid).Consistency(gocql.One).Iter()
+	for itr.MapScan(m) {
+		return true
+	}
+
+	return false
+}
+
 func createPromize(promize *Promize) error {
 	q := `
         INSERT INTO promizes (
@@ -209,28 +242,97 @@ func getPromize(bank string, id string) (*Promize, error) {
 	return nil, errors.New("Not found promize")
 }
 
-func isDoubleSpend(from string, cid string) bool {
-	// parse cid and get uuid
-	uuid, err := gocql.ParseUUID(cid)
+func createUser(user *User) error {
+	q := `
+        INSERT INTO users (
+			zaddress,
+            bank,
+			account,
+			public_key,
+            salt,
+            state
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+    `
+	err := Session.Query(q,
+		user.Zaddress,
+		user.Bank,
+		user.Account,
+		user.PublicKey,
+		user.Salt,
+		user.State).Exec()
+
 	if err != nil {
-		println(err.Error)
-		return true
+		println(err.Error())
 	}
 
+	return err
+}
+
+func getUser(zaddress string) (*User, error) {
 	m := map[string]interface{}{}
 	q := `
-        SELECT id FROM trans
-            WHERE from_zaddress=?
-            AND promize_id=?
+        SELECT account, salt 
+        FROM users
+        WHERE zaddress = ?
         LIMIT 1
-        ALLOW FILTERING
     `
-	itr := Session.Query(q, from, uuid).Consistency(gocql.One).Iter()
+	itr := Session.Query(q, zaddress).Consistency(gocql.One).Iter()
 	for itr.MapScan(m) {
-		return true
+		user := &User{}
+		user.Zaddress = zaddress
+		user.Account = m["account"].(string)
+		user.Salt = m["salt"].(string)
+
+		return user, nil
 	}
 
-	return false
+	return nil, errors.New("Not found promize")
+}
+
+func setUserState(state string, zaddress string) error {
+	q := `
+		UPDATE users 
+			SET state = ? 
+        WHERE zaddress = ?
+        `
+	err := Session.Query(q, state, zaddress).Exec()
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func setUserSalt(salt string, zaddress string) error {
+	q := `
+		UPDATE users 
+			SET salt = ? 
+        WHERE zaddress = ?
+        `
+	err := Session.Query(q, salt, zaddress).Exec()
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func setUserAccount(account string, zaddress string) error {
+	q := `
+		UPDATE users 
+			SET account = ? 
+        WHERE zaddress = ?
+        `
+	err := Session.Query(q, account, zaddress).Exec()
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func uuid() gocql.UUID {

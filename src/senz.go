@@ -170,7 +170,7 @@ func handling(senzie *Senzie, senz *Senz) {
 			// call finacle to fund transfer
 			err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount)
 			if err != nil {
-				senzie.out <- statusSenz("ERROR", senz.Attr["uid"], id, "cbid", senz.Sender)
+				senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
 				return
 			}
 
@@ -182,7 +182,7 @@ func handling(senzie *Senzie, senz *Senz) {
 			// TODO handle create failures
 
 			// send status back to fromAcc
-			senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], promize.Id.String(), promize.Bank, senz.Sender)
+			senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], senz.Sender)
 
 			// forward cheque to toAcc
 			senzie.out <- promizeSenz(promize, senz.Sender, senz.Attr["to"], uid())
@@ -191,12 +191,12 @@ func handling(senzie *Senzie, senz *Senz) {
 			// check for double spend
 			if isDoubleSpend(senz.Sender, id) {
 				// send error status back
-				senzie.out <- statusSenz("ERROR", senz.Attr["uid"], id, "cbid", senz.Sender)
+				senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
 			} else {
 				// get cheque first
 				promize, err := getPromize(senz.Attr["bnk"], id)
 				if err != nil {
-					senzie.out <- statusSenz("ERROR", senz.Attr["uid"], id, "cbid", senz.Sender)
+					senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
 				} else {
 					// new trans
 					trans := senzToTrans(senz, promize)
@@ -208,7 +208,7 @@ func handling(senzie *Senzie, senz *Senz) {
 					// call finacle to fund transfer
 					err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount)
 					if err != nil {
-						senzie.out <- statusSenz("ERROR", senz.Attr["uid"], id, "cbid", senz.Sender)
+						senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
 						return
 					}
 
@@ -216,7 +216,7 @@ func handling(senzie *Senzie, senz *Senz) {
 					createTrans(trans)
 
 					// send success status back
-					senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], id, "cbid", senz.Sender)
+					senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], senz.Sender)
 				}
 			}
 		}
