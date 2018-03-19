@@ -23,8 +23,8 @@ func main() {
 
 	// router
 	r := mux.NewRouter()
-	r.HandleFunc("/promizes", promize).Methods("POST")
-	r.HandleFunc("/users", userz).Methods("POST")
+	r.HandleFunc("/promizes", promizes).Methods("POST")
+	r.HandleFunc("/uzers", uzers).Methods("POST")
 
 	// start server
 	err := http.ListenAndServe(":7070", r)
@@ -34,7 +34,7 @@ func main() {
 	}
 }
 
-func promize(w http.ResponseWriter, r *http.Request) {
+func promizes(w http.ResponseWriter, r *http.Request) {
 	// read body
 	b, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -58,7 +58,7 @@ func promize(w http.ResponseWriter, r *http.Request) {
 		trans.Type = "TRANSFER"
 
 		// call finacle to fund transfer
-		err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount)
+		err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, transConfig.commission)
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return
@@ -113,7 +113,7 @@ func promize(w http.ResponseWriter, r *http.Request) {
 		trans.Type = "REDEEM"
 
 		// call finacle to fund transfer
-		err = doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount)
+		err = doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, transConfig.commission)
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return
@@ -138,7 +138,7 @@ func promize(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func userz(w http.ResponseWriter, r *http.Request) {
+func uzers(w http.ResponseWriter, r *http.Request) {
 	// read body
 	b, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -179,7 +179,7 @@ func userz(w http.ResponseWriter, r *http.Request) {
 		salt := randomSalt()
 
 		// fund transfer salt amount
-		err := doFundTrans(acc, transConfig.account, salt)
+		err := doFundTrans(acc, transConfig.account, salt, "")
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return
@@ -217,7 +217,7 @@ func userz(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// fund transfer salt amount
-		err = doFundTrans(transConfig.account, user.Account, salt)
+		err = doFundTrans(transConfig.account, user.Account, salt, "")
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return

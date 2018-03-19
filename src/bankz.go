@@ -19,11 +19,11 @@ type FundTrans struct {
 	Date       string
 }
 
-func doFundTrans(fromAcc string, toAcc string, amount string) error {
+func doFundTrans(fromAcc string, toAcc string, amount string, commission string) error {
 	client := &http.Client{}
 
 	// request with xml soap data
-	reqXml, err := fundTransReq(fromAcc, toAcc, amount)
+	reqXml, err := fundTransReq(fromAcc, toAcc, amount, commission)
 	if err != nil {
 		println(err.Error)
 		return err
@@ -71,7 +71,7 @@ func doFundTrans(fromAcc string, toAcc string, amount string) error {
 	return nil
 }
 
-func fundTransReq(fromAcc string, toAcc string, amount string) (string, error) {
+func fundTransReq(fromAcc string, toAcc string, amount string, commission string) (string, error) {
 	// format template path
 	cwd, _ := os.Getwd()
 	tp := filepath.Join(cwd, "./template/trans.xml")
@@ -89,7 +89,7 @@ func fundTransReq(fromAcc string, toAcc string, amount string) (string, error) {
 	ft.FromAcc = fromAcc
 	ft.ToAcc = toAcc
 	ft.Amount = amount
-	ft.Commission = transConfig.commission
+	ft.Commission = commission
 	ft.Memo = ""
 	ft.Date = ""
 

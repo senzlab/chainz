@@ -168,7 +168,7 @@ func handling(senzie *Senzie, senz *Senz) {
 			trans.Type = "TRANSFER"
 
 			// call finacle to fund transfer
-			err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount)
+			err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, transConfig.commission)
 			if err != nil {
 				senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
 				return
@@ -206,7 +206,7 @@ func handling(senzie *Senzie, senz *Senz) {
 					trans.Type = "REDEEM"
 
 					// call finacle to fund transfer
-					err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount)
+					err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, transConfig.commission)
 					if err != nil {
 						senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
 						return
