@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"text/template"
+	"time"
 )
 
 type FundTrans struct {
@@ -32,7 +33,7 @@ func doFundTrans(fromAcc string, toAcc string, amount string, commission string)
 	println(reqXml)
 
 	// TODO remove this
-	return nil
+	//return nil
 
 	req, err := http.NewRequest("POST", transConfig.api, bytes.NewBuffer([]byte(reqXml)))
 	if err != nil {
@@ -91,7 +92,7 @@ func fundTransReq(fromAcc string, toAcc string, amount string, commission string
 	ft.Amount = amount
 	ft.Commission = commission
 	ft.Memo = ""
-	ft.Date = ""
+	ft.Date = time.Now().Format("02/01/2006")
 
 	// parse template
 	var buf bytes.Buffer

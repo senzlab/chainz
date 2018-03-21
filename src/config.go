@@ -56,7 +56,7 @@ var transConfig = TransConfig{
 	api:        getEnv("TRANS_API", "http://192.168.125.93:7800/sd/iib/IIBFinacleIntegration"),
 	action:     getEnv("TRANS_ACTION", "http://192.168.125.93:7800/sd/iib/iibfinacleintegration"),
 	commission: getEnv("TRANS_COMMISSION", "20"),
-	account:    getEnv("TRANS_ACCOUNT", "900010000801"),
+	account:    getEnv("TRANS_ACCOUNT", "900100000801"),
 }
 
 var authConfig = AuthConfig{

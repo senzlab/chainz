@@ -4,7 +4,7 @@
       <iib:DoTransferRequest>
          <APPCode>SVR</APPCode>
          <Controller>CMN</Controller>
-         <CDCICode>C</CDCICode>
+         <CDCICode>V</CDCICode>
          <FromAccountNo>{{.FromAcc}}</FromAccountNo>
          <ToAccountNo>{{.ToAcc}}</ToAccountNo>
          <DTxnAmount>{{.Amount}}</DTxnAmount>

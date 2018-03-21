@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 const (
@@ -13,7 +14,13 @@ const (
 )
 
 func main() {
-	trans()
+	//trans()
+	date()
+}
+
+func date() {
+	d := time.Now().Format("02/01/2006")
+	println(d)
 }
 
 func trans() error {
@@ -70,13 +77,13 @@ func req() string {
       <iib:DoTransferRequest>
          <APPCode>SVR</APPCode>
          <Controller>CMN</Controller>
-         <CDCICode>C</CDCICode>
+         <CDCICode>V</CDCICode>
          <FromAccountNo>100105875594</FromAccountNo>
          <ToAccountNo>100105999635</ToAccountNo>
          <DTxnAmount>100</DTxnAmount>
          <DCommAmount></DCommAmount>
          <TransMemo>Promize Eranga</TransMemo>
-         <ValueDate>06/03/2018</ValueDate>
+         <ValueDate>19/03/2018</ValueDate>
          <FromCurrCode>LKR</FromCurrCode>
       </iib:DoTransferRequest>
    </soapenv:Body>
