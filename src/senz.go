@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"net"
-	"os"
 )
 
 type Senzie struct {
@@ -41,20 +40,16 @@ func m() {
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", config.switchHost+":"+config.switchPort)
 	if err != nil {
 		fmt.Println("Error address:", err.Error())
-		os.Exit(1)
+		return
 	}
 
 	// tcp connect
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
-		os.Exit(1)
+		return
 	}
-
-	// close on app closes
 	defer conn.Close()
-
-	fmt.Println("connected to switch")
 
 	// create senzie
 	senzie := &Senzie{
@@ -84,7 +79,7 @@ func registering(senzie *Senzie) {
 		fmt.Println("Error reading: ", err.Error())
 
 		senzie.conn.Close()
-		os.Exit(1)
+		return
 	}
 
 	// parse senz
@@ -98,7 +93,7 @@ func registering(senzie *Senzie) {
 	} else {
 		// close and exit
 		senzie.conn.Close()
-		os.Exit(1)
+		return
 	}
 }
 
@@ -126,9 +121,8 @@ READER:
 			continue READER
 		}
 
-		// parse and handle
-		senz := parse(msg)
-		go handling(senzie, &senz)
+		// handle msg via goroute
+		go handling(senzie, msg)
 	}
 }
 
@@ -152,81 +146,77 @@ WRITER:
 	}
 }
 
-func handling(senzie *Senzie, senz *Senz) {
-	if senz.Ztype == "SHARE" {
-		// frist send AWA back
-		senzie.out <- awaSenz(senz.Attr["uid"])
+func handling(senzie *Senzie, msg string) {
+	// parse and handle
+	senz := parse(msg)
 
-		if id, ok := senz.Attr["id"]; !ok {
-			// this means new cheque
-			// and new trans
-			promize := senzToPromize(senz)
-			trans := senzToTrans(senz, promize)
-			trans.FromBank = senz.Attr["bnk"]
-			trans.FromAccount = senz.Attr["acc"]
-			trans.ToAccount = transConfig.account
-			trans.Type = "TRANSFER"
+	// TODO handle parse error
 
-			// call finacle to fund transfer
-			err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, transConfig.commission)
-			if err != nil {
-				senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
-				return
-			}
+	// frist send AWA back
+	senzie.out <- awaSenz(senz.Attr["uid"])
 
-			// create cheque
-			// create trans
-			createPromize(promize)
-			createTrans(trans)
+	if id, ok := senz.Attr["id"]; !ok {
+		// this means new cheque
+		// and new trans
+		promize := senzToPromize(&senz)
+		trans := senzToTrans(&senz, promize)
+		trans.FromBank = senz.Attr["bnk"]
+		trans.FromAccount = senz.Attr["acc"]
+		trans.ToAccount = transConfig.account
+		trans.Type = "TRANSFER"
 
-			// TODO handle create failures
-
-			// send status back to fromAcc
-			senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], senz.Sender)
-
-			// forward cheque to toAcc
-			senzie.out <- promizeSenz(promize, senz.Sender, senz.Attr["to"], uid())
-		} else {
-			// this mean already transfered cheque
-			// check for double spend
-			if isDoubleSpend(senz.Sender, id) {
-				// send error status back
-				senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
-			} else {
-				// get cheque first
-				promize, err := getPromize(senz.Attr["bnk"], id)
-				if err != nil {
-					senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
-				} else {
-					// new trans
-					trans := senzToTrans(senz, promize)
-					trans.FromAccount = transConfig.account
-					trans.ToBank = senz.Attr["bnk"]
-					trans.ToAccount = senz.Attr["acc"]
-					trans.Type = "REDEEM"
-
-					// call finacle to fund transfer
-					err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, transConfig.commission)
-					if err != nil {
-						senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
-						return
-					}
-
-					// create trans
-					createTrans(trans)
-
-					// send success status back
-					senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], senz.Sender)
-				}
-			}
+		// call finacle to fund transfer
+		err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, transConfig.commission)
+		if err != nil {
+			senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
+			return
 		}
-	} else if senz.Ztype == "DATA" {
-		// writng awa back
-		senzie.out <- awaSenz(senz.Attr["uid"])
 
-		// update check status in db
-		if senz.Attr["status"] == "CHEQUE_SHARED" {
+		// create cheque
+		// create trans
+		createPromize(promize)
+		createTrans(trans)
 
+		// TODO handle create failures
+
+		// send status back to fromAcc
+		// forward cheque to toAcc
+		senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], senz.Sender)
+		senzie.out <- promizeSenz(promize, senz.Sender, senz.Attr["to"], uid())
+	} else {
+		// this mean already transfered cheque
+		// check for double spend
+		if isDoubleSpend(senz.Sender, id) {
+			// send error status back
+			senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
+			return
 		}
+
+		// get cheque first
+		promize, err := getPromize(senz.Attr["bnk"], id)
+		if err != nil {
+			senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
+			return
+		}
+
+		// new trans
+		trans := senzToTrans(&senz, promize)
+		trans.FromAccount = transConfig.account
+		trans.ToBank = senz.Attr["bnk"]
+		trans.ToAccount = senz.Attr["acc"]
+		trans.Type = "REDEEM"
+
+		// call finacle to fund transfer
+		err = doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, transConfig.commission)
+		if err != nil {
+			senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
+			return
+		}
+
+		// create trans
+		createTrans(trans)
+
+		// send success status back
+		senzie.out <- statusSenz("SUCCESS", senz.Attr["uid"], senz.Sender)
 	}
 }
