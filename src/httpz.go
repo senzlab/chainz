@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type SenzMsg struct {
@@ -41,12 +42,24 @@ func promizes(w http.ResponseWriter, r *http.Request) {
 
 	println(string(b))
 
-	// unmarshel json
+	// unmarshel json and parse senz
 	var senzMsg SenzMsg
 	json.Unmarshal(b, &senzMsg)
-
-	// handle senz
 	senz := parse(senzMsg.Msg)
+
+	// get senzie key
+	user, err := getUser(senz.Sender)
+	if err != nil {
+		errorResponse(w, senz.Attr["uid"], senz.Sender)
+	}
+
+	// verify signature
+	payload := strings.Replace(senz.Msg, senz.Digsig, "", -1)
+	err = verify(payload, senz.Digsig, getSenzieRsaPub(user.PublicKey))
+	if err != nil {
+		errorResponse(w, senz.Attr["uid"], senz.Sender)
+	}
+
 	if id, ok := senz.Attr["id"]; !ok {
 		// this means new cheque
 		// and new trans
@@ -148,9 +161,15 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 	// unmarshel json
 	var senzMsg SenzMsg
 	json.Unmarshal(b, &senzMsg)
-
-	// handle senz
 	senz := parse(senzMsg.Msg)
+
+	// verify signature
+	payload := strings.Replace(senz.Msg, senz.Digsig, "", -1)
+	err := verify(payload, senz.Digsig, getSenzieRsaPub(senz.Attr["pubkey"]))
+	if err != nil {
+		errorResponse(w, senz.Attr["uid"], senz.Sender)
+	}
+
 	if _, ok := senz.Attr["pubkey"]; ok {
 		// create user
 		user := senzToUser(&senz)

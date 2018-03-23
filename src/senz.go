@@ -152,6 +152,8 @@ func handling(senzie *Senzie, msg string) {
 
 	// TODO handle parse error
 
+	// TODO verify signature
+
 	// frist send AWA back
 	senzie.out <- awaSenz(senz.Attr["uid"])
 

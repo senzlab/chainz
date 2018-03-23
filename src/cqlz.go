@@ -272,7 +272,7 @@ func createUser(user *User) error {
 func getUser(zaddress string) (*User, error) {
 	m := map[string]interface{}{}
 	q := `
-        SELECT account, salt 
+        SELECT account, salt, public_key 
         FROM users
         WHERE zaddress = ?
         LIMIT 1
@@ -283,6 +283,7 @@ func getUser(zaddress string) (*User, error) {
 		user.Zaddress = zaddress
 		user.Account = m["account"].(string)
 		user.Salt = m["salt"].(string)
+		user.PublicKey = m["public_key"].(string)
 
 		return user, nil
 	}
