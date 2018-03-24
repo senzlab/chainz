@@ -282,11 +282,13 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 
 func errorResponse(w http.ResponseWriter, uid string, to string) {
 	// marshel and return error
-	senzMsg := SenzMsg{
+	zmsg := SenzMsg{
 		Uid: uid,
 		Msg: statusSenz("ERROR", uid, to),
 	}
-	j, _ := json.Marshal(senzMsg)
+	var zmsgs []SenzMsg
+	zmsgs = append(zmsgs, zmsg)
+	j, _ := json.Marshal(zmsgs)
 	http.Error(w, string(j), 400)
 }
 
