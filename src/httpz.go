@@ -163,17 +163,17 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(b, &senzMsg)
 	senz := parse(senzMsg.Msg)
 
-	// verify signature
-	payload := strings.Replace(senz.Msg, senz.Digsig, "", -1)
-	err := verify(payload, senz.Digsig, getSenzieRsaPub(senz.Attr["pubkey"]))
-	if err != nil {
-		errorResponse(w, senz.Attr["uid"], senz.Sender)
-	}
-
 	if _, ok := senz.Attr["pubkey"]; ok {
+		// verify signature
+		payload := strings.Replace(senz.Msg, senz.Digsig, "", -1)
+		err := verify(payload, senz.Digsig, getSenzieRsaPub(senz.Attr["pubkey"]))
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+		}
+
 		// create user
 		user := senzToUser(&senz)
-		err := createUser(user)
+		err = createUser(user)
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return
@@ -193,12 +193,25 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if acc, ok := senz.Attr["acc"]; ok {
+		// user shoule be here
+		user, err := getUser(senz.Sender)
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+		}
+
+		// verify signature
+		payload := strings.Replace(senz.Msg, senz.Digsig, "", -1)
+		err = verify(payload, senz.Digsig, getSenzieRsaPub(user.PublicKey))
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+		}
+
 		// add account
 		// generate salt amount
 		salt := randomSalt()
 
 		// fund transfer salt amount
-		err := doFundTrans(acc, transConfig.account, salt, "")
+		err = doFundTrans(acc, transConfig.account, salt, "")
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return
@@ -223,13 +236,21 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if salt, ok := senz.Attr["salt"]; ok {
-		// confirm salt
-		// get user and compare salt
+		// user should be here
 		user, err := getUser(senz.Sender)
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return
 		}
+
+		// verify signature
+		payload := strings.Replace(senz.Msg, senz.Digsig, "", -1)
+		err = verify(payload, senz.Digsig, getSenzieRsaPub(user.PublicKey))
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+		}
+
+		// copare salt
 		if user.Salt != salt {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return
