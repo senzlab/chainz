@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -15,8 +17,25 @@ const (
 )
 
 func main() {
-	trans()
+	//trans()
 	//date()
+	//random()
+	random()
+	//y := random()
+	//z := random()
+	//a := fmt.Sprintf("%d.%d%d", x, y, z)
+	//println(a)
+}
+
+func random() string {
+	rand.Seed(time.Now().Unix())
+	x := rand.Intn(2) + 1
+	y := rand.Intn(9)
+	z := rand.Intn(9)
+	s := fmt.Sprintf("%d.%d%d", x, y, z)
+	fmt.Println(s)
+
+	return s
 }
 
 func date() {
