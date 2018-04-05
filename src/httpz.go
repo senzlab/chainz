@@ -210,8 +210,17 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 		// generate salt amount
 		salt := randomSalt()
 
-		// fund transfer salt amount
+		// transaction
+		// fund transfer salt amount from acc to parking acc
 		err = doFundTrans(acc, transConfig.account, salt, "")
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
+		}
+
+		// reverse
+		// fund transfer salt amount from parking acc to acc
+		err = doFundTrans(transConfig.account, acc, salt, "")
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return
@@ -250,15 +259,8 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 		}
 
-		// copare salt
+		// compare salt
 		if user.Salt != salt {
-			errorResponse(w, senz.Attr["uid"], senz.Sender)
-			return
-		}
-
-		// fund transfer salt amount
-		err = doFundTrans(transConfig.account, user.Account, salt, "")
-		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return
 		}
