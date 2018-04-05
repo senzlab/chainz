@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -14,8 +15,8 @@ const (
 )
 
 func main() {
-	//trans()
-	date()
+	trans()
+	//date()
 }
 
 func date() {
@@ -66,6 +67,14 @@ func trans() error {
 	}
 	println(string(resXml))
 
+	if !strings.Contains(string(resXml), "<ActionCode>000") {
+		// trans done
+		println("invalid response----")
+		return errors.New("Invalid response")
+	} else {
+		println("done res----")
+	}
+
 	return nil
 }
 
@@ -75,9 +84,9 @@ func req() string {
    <soapenv:Header/>
    <soapenv:Body>
       <iib:DoTransferRequest>
-         <APPCode>SVR</APPCode>
+         <APPCode>GFT</APPCode>
          <Controller>CMN</Controller>
-         <CDCICode>V</CDCICode>
+         <CDCICode>C</CDCICode>
          <FromAccountNo>100105875594</FromAccountNo>
          <ToAccountNo>100105999635</ToAccountNo>
          <DTxnAmount>100</DTxnAmount>
@@ -86,6 +95,62 @@ func req() string {
          <ValueDate>19/03/2018</ValueDate>
          <FromCurrCode>LKR</FromCurrCode>
       </iib:DoTransferRequest>
+   </soapenv:Body>
+</soapenv:Envelope>
+`
+	return xml
+}
+
+func sreq() string {
+	xml := `
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:iib="http://www.sampath.lk/SD/IIBFinacleIntegration/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <iib:DoInterBankTransferRequest>
+         <!--Optional:-->
+         <APPCode>VSW</APPCode>
+         <!--Optional:-->
+         <Controller>CMN</Controller>
+         <!--Optional:-->
+         <CDCICode>F</CDCICode>
+         <!--Optional:-->
+         <TerminalID></TerminalID>
+         <!--Optional:-->
+         <CardNo></CardNo>
+         <FromAccNo>900100000801</FromAccNo>
+         <!--Optional:-->
+         <FromAccType></FromAccType>
+         <!--Optional:-->
+         <FromAccBankCode>7278</FromAccBankCode>
+         <!--Optional:-->
+         <FromAccBranchCode></FromAccBranchCode>
+         <ToAccNo>100178099707</ToAccNo>
+         <!--Optional:-->
+         <ToAccName>Lakshan</ToAccName>
+         <!--Optional:-->
+         <ToAccType></ToAccType>
+         <ToAccBankCode>7719</ToAccBankCode>
+         <!--Optional:-->
+         <ToAccBranchCode>017</ToAccBranchCode>
+         <TxnAmount>100</TxnAmount>
+         <CommAmount>20</CommAmount>
+         <!--Optional:-->
+         <CommAccount>900108020041</CommAccount>
+         <!--Optional:-->
+         <TranRemarks></TranRemarks>
+         <!--Optional:-->
+         <ValueDate>05/04/2018</ValueDate>
+         <!--Optional:-->
+         <SlipsCode></SlipsCode>
+         <!--Optional:-->
+         <DrCurrencyCode></DrCurrencyCode>
+         <!--Optional:-->
+         <ChannelType></ChannelType>
+         <CEFTFlag></CEFTFlag>
+         <FromAccName></FromAccName>
+         <!--Optional:-->
+         <Reference></Reference>
+      </iib:DoInterBankTransferRequest>
    </soapenv:Body>
 </soapenv:Envelope>
 `

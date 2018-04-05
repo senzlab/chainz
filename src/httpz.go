@@ -126,7 +126,7 @@ func promizes(w http.ResponseWriter, r *http.Request) {
 		trans.Type = "REDEEM"
 
 		// call finacle to fund transfer
-		err = doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, transConfig.commission)
+		err = doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, "")
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -68,6 +69,11 @@ func doFundTrans(fromAcc string, toAcc string, amount string, commission string)
 		return err
 	}
 	println(string(resXml))
+	if !strings.Contains(string(resXml), "<ActionCode>000") {
+		// trans done
+		println("invalid response")
+		return errors.New("Invalid response")
+	}
 
 	return nil
 }

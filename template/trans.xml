@@ -2,9 +2,9 @@
    <soapenv:Header/>
    <soapenv:Body>
       <iib:DoTransferRequest>
-         <APPCode>SVR</APPCode>
+         <APPCode>GFT</APPCode>
          <Controller>CMN</Controller>
-         <CDCICode>V</CDCICode>
+         <CDCICode>C</CDCICode>
          <FromAccountNo>{{.FromAcc}}</FromAccountNo>
          <ToAccountNo>{{.ToAcc}}</ToAccountNo>
          <DTxnAmount>{{.Amount}}</DTxnAmount>
