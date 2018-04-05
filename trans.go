@@ -29,8 +29,8 @@ func main() {
 
 func random() string {
 	rand.Seed(time.Now().Unix())
-	x := rand.Intn(2) + 1
-	y := rand.Intn(9)
+	x := rand.Intn(2)
+	y := rand.Intn(9-1) + 1
 	z := rand.Intn(9)
 	s := fmt.Sprintf("%d.%d%d", x, y, z)
 	fmt.Println(s)

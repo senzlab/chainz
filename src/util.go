@@ -77,10 +77,10 @@ func timestamp() int64 {
 }
 
 func randomSalt() string {
-	// gengerate random salt between 1.00 - 3.00
+	// gengerate random salt between 0.10 - 2.00
 	rand.Seed(time.Now().Unix())
-	x := rand.Intn(2) + 1
-	y := rand.Intn(9)
+	x := rand.Intn(2)
+	y := rand.Intn(9-1) + 1
 	z := rand.Intn(9)
 	return fmt.Sprintf("%d.%d%d", x, y, z)
 }
