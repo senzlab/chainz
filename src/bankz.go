@@ -97,7 +97,7 @@ func fundTransReq(fromAcc string, toAcc string, amount string, commission string
 	ft.ToAcc = toAcc
 	ft.Amount = amount
 	ft.Commission = commission
-	ft.Memo = ""
+	ft.Memo = "iGift account verification"
 	ft.Date = time.Now().Format("02/01/2006")
 
 	// parse template
