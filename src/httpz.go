@@ -71,7 +71,7 @@ func promizes(w http.ResponseWriter, r *http.Request) {
 		trans.Type = "TRANSFER"
 
 		// call finacle to fund transfer
-		err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, transConfig.commission)
+		err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, transConfig.commission, senz.Attr["uid"])
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return
@@ -126,7 +126,7 @@ func promizes(w http.ResponseWriter, r *http.Request) {
 		trans.Type = "REDEEM"
 
 		// call finacle to fund transfer
-		err = doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, "")
+		err = doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, "", id)
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return
@@ -210,9 +210,12 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 		// generate salt amount
 		salt := randomSalt()
 
+		// memo is registration
+		memo := "iGift account verification"
+
 		// transaction
 		// fund transfer salt amount from acc to parking acc
-		err = doFundTrans(acc, transConfig.account, salt, "")
+		err = doFundTrans(acc, transConfig.account, salt, "", memo)
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return
@@ -220,7 +223,7 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 
 		// reverse
 		// fund transfer salt amount from parking acc to acc
-		err = doFundTrans(transConfig.account, acc, salt, "")
+		err = doFundTrans(transConfig.account, acc, salt, "", memo)
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return

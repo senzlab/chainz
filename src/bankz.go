@@ -21,11 +21,11 @@ type FundTrans struct {
 	Date       string
 }
 
-func doFundTrans(fromAcc string, toAcc string, amount string, commission string) error {
+func doFundTrans(fromAcc string, toAcc string, amount string, commission string, memo string) error {
 	client := &http.Client{}
 
 	// request with xml soap data
-	reqXml, err := fundTransReq(fromAcc, toAcc, amount, commission)
+	reqXml, err := fundTransReq(fromAcc, toAcc, amount, commission, memo)
 	if err != nil {
 		println(err.Error)
 		return err
@@ -78,7 +78,7 @@ func doFundTrans(fromAcc string, toAcc string, amount string, commission string)
 	return nil
 }
 
-func fundTransReq(fromAcc string, toAcc string, amount string, commission string) (string, error) {
+func fundTransReq(fromAcc string, toAcc string, amount string, commission string, memo string) (string, error) {
 	// format template path
 	cwd, _ := os.Getwd()
 	tp := filepath.Join(cwd, "./template/trans.xml")
@@ -97,7 +97,7 @@ func fundTransReq(fromAcc string, toAcc string, amount string, commission string
 	ft.ToAcc = toAcc
 	ft.Amount = amount
 	ft.Commission = commission
-	ft.Memo = "iGift account verification"
+	ft.Memo = memo
 	ft.Date = time.Now().Format("02/01/2006")
 
 	// parse template
