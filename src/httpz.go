@@ -60,8 +60,22 @@ func promizes(w http.ResponseWriter, r *http.Request) {
 		errorResponse(w, senz.Attr["uid"], senz.Sender)
 	}
 
-	if id, ok := senz.Attr["id"]; !ok {
-		// this means new cheque
+	// check for double spend first
+	if isDoubleSpend(senz.Sender, senz.Attr["id"]) {
+		// double spend response
+		zmsg := SenzMsg{
+			Uid: senz.Attr["uid"],
+			Msg: statusSenz("DOUBLE_SPEND", senz.Attr["uid"], senz.Sender),
+		}
+		var zmsgs []SenzMsg
+		zmsgs = append(zmsgs, zmsg)
+
+		successResponse(w, zmsgs)
+		return
+	}
+
+	if senz.Attr["type"] == "TRANSFER" {
+		// this means new promize
 		// and new trans
 		promize := senzToPromize(&senz)
 		trans := senzToTrans(&senz, promize)
@@ -105,13 +119,8 @@ func promizes(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		// this mean already transfered cheque
-		// check for double spend
-		if isDoubleSpend(senz.Sender, id) {
-			errorResponse(w, senz.Attr["uid"], senz.Sender)
-			return
-		}
-
 		// get cheque first
+		id := senz.Attr["id"]
 		promize, err := getPromize(senz.Attr["bnk"], id)
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)

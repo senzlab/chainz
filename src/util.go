@@ -88,7 +88,8 @@ func randomSalt() string {
 func senzToPromize(senz *Senz) *Promize {
 	promize := &Promize{}
 	promize.Bank = config.senzieName
-	promize.Id = uuid()
+	id, _ := cuuid(senz.Attr["id"])
+	promize.Id = id
 	promize.Amount = senz.Attr["amnt"]
 	promize.Blob = senz.Attr["blob"]
 	promize.OriginZaddress = senz.Sender
