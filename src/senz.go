@@ -195,7 +195,7 @@ func handling(senzie *Senzie, msg string) {
 		}
 
 		// get cheque first
-		promize, err := getPromize(config.SenzieName, id)
+		promize, err := getPromize(config.senzieName, id)
 		if err != nil {
 			senzie.out <- statusSenz("ERROR", senz.Attr["uid"], senz.Sender)
 			return
