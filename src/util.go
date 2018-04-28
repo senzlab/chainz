@@ -93,7 +93,7 @@ func senzToPromize(senz *Senz) *Promize {
 	promize.Amount = senz.Attr["amnt"]
 	promize.Blob = senz.Attr["blob"]
 	promize.OriginZaddress = senz.Sender
-	promize.OriginBank = senz.Attr["bnk"]
+	promize.OriginBank = config.SenzieName
 	promize.OriginAccount = senz.Attr["acc"]
 
 	return promize
