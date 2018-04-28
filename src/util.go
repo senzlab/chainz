@@ -103,6 +103,7 @@ func senzToTrans(senz *Senz, promize *Promize) *Trans {
 	trans := &Trans{}
 	trans.Bank = config.senzieName
 	trans.Id = uuid()
+	trans.Timestamp = timestamp()
 	trans.PromizeBank = promize.Bank
 	trans.PromizeId = promize.Id
 	trans.PromizeAmount = promize.Amount
@@ -120,6 +121,8 @@ func senzToUser(senz *Senz) *User {
 	user.Bank = senz.Attr["bank"]
 	user.Account = senz.Attr["account"]
 	user.PublicKey = senz.Attr["pubkey"]
+	user.Verified = false
+	user.Active = true
 
 	return user
 }

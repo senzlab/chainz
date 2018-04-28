@@ -42,7 +42,8 @@ type User struct {
 	Account   string
 	Salt      string // random debit amount
 	PublicKey string
-	State     string
+	Verified  bool
+	Active    bool
 }
 
 var Session *gocql.Session
@@ -250,9 +251,10 @@ func createUser(user *User) error {
 			account,
 			public_key,
             salt,
-            state
+            verified,
+			active
         )
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     `
 	err := Session.Query(q,
 		user.Zaddress,
@@ -260,7 +262,8 @@ func createUser(user *User) error {
 		user.Account,
 		user.PublicKey,
 		user.Salt,
-		user.State).Exec()
+		user.Verified,
+		user.Active).Exec()
 
 	if err != nil {
 		println(err.Error())
@@ -272,7 +275,7 @@ func createUser(user *User) error {
 func getUser(zaddress string) (*User, error) {
 	m := map[string]interface{}{}
 	q := `
-        SELECT account, salt, public_key 
+        SELECT account, salt, public_key, verified, active
         FROM users
         WHERE zaddress = ?
         LIMIT 1
@@ -284,6 +287,8 @@ func getUser(zaddress string) (*User, error) {
 		user.Account = m["account"].(string)
 		user.Salt = m["salt"].(string)
 		user.PublicKey = m["public_key"].(string)
+		user.Verified = m["verified"].(bool)
+		user.Active = m["active"].(bool)
 
 		return user, nil
 	}
@@ -291,13 +296,13 @@ func getUser(zaddress string) (*User, error) {
 	return nil, errors.New("Not found promize")
 }
 
-func setUserState(state string, zaddress string) error {
+func setUserVerified(verified bool, zaddress string) error {
 	q := `
 		UPDATE users 
-			SET state = ? 
+			SET verified = ? 
         WHERE zaddress = ?
         `
-	err := Session.Query(q, state, zaddress).Exec()
+	err := Session.Query(q, verified, zaddress).Exec()
 	if err != nil {
 		println(err.Error())
 		return err

@@ -51,6 +51,13 @@ func promizes(w http.ResponseWriter, r *http.Request) {
 	user, err := getUser(senz.Sender)
 	if err != nil {
 		errorResponse(w, senz.Attr["uid"], senz.Sender)
+		return
+	}
+
+	// user needs to be active
+	if !user.Active {
+		errorResponse(w, senz.Attr["uid"], senz.Sender)
+		return
 	}
 
 	// verify signature
@@ -58,6 +65,7 @@ func promizes(w http.ResponseWriter, r *http.Request) {
 	err = verify(payload, senz.Digsig, getSenzieRsaPub(user.PublicKey))
 	if err != nil {
 		errorResponse(w, senz.Attr["uid"], senz.Sender)
+		return
 	}
 
 	// check for double spend first
@@ -178,6 +186,7 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 		err := verify(payload, senz.Digsig, getSenzieRsaPub(senz.Attr["pubkey"]))
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
 		}
 
 		// create user
@@ -206,6 +215,7 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 		user, err := getUser(senz.Sender)
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
 		}
 
 		// verify signature
@@ -213,6 +223,7 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 		err = verify(payload, senz.Digsig, getSenzieRsaPub(user.PublicKey))
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
 		}
 
 		// add account
@@ -277,8 +288,8 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// set state
-		setUserState("VERIFIED", senz.Sender)
+		// set verified
+		setUserVerified(true, senz.Sender)
 
 		// return success response
 		zmsg := SenzMsg{
