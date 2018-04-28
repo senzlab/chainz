@@ -118,8 +118,7 @@ func senzToTrans(senz *Senz, promize *Promize) *Trans {
 func senzToUser(senz *Senz) *User {
 	user := &User{}
 	user.Zaddress = senz.Sender
-	user.Bank = senz.Attr["bank"]
-	user.Account = senz.Attr["account"]
+	user.Bank = config.senzieName
 	user.PublicKey = senz.Attr["pubkey"]
 	user.Verified = false
 	user.Active = true
