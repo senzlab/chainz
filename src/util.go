@@ -95,6 +95,7 @@ func senzToPromize(senz *Senz) *Promize {
 	promize.OriginZaddress = senz.Sender
 	promize.OriginBank = config.senzieName
 	promize.OriginAccount = senz.Attr["acc"]
+	promize.Timestamp = timestamp()
 
 	return promize
 }
@@ -122,6 +123,7 @@ func senzToUser(senz *Senz) *User {
 	user.PublicKey = senz.Attr["pubkey"]
 	user.Verified = false
 	user.Active = true
+	user.Timestamp = timestamp()
 
 	return user
 }

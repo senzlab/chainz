@@ -34,6 +34,7 @@ type Promize struct {
 	OriginZaddress string
 	OriginBank     string
 	OriginAccount  string
+	Timestamp      int64
 }
 
 type User struct {
@@ -44,6 +45,7 @@ type User struct {
 	PublicKey string
 	Verified  bool
 	Active    bool
+	Timestamp int64
 }
 
 var Session *gocql.Session
@@ -191,9 +193,10 @@ func createPromize(promize *Promize) error {
             blob,
             origin_zaddress,
 			origin_bank,
-			origin_account
+			origin_account,
+			timestamp
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `
 	err := Session.Query(q,
 		promize.Bank,
@@ -202,7 +205,8 @@ func createPromize(promize *Promize) error {
 		promize.Blob,
 		promize.OriginZaddress,
 		promize.OriginBank,
-		promize.OriginAccount).Exec()
+		promize.OriginAccount,
+		promize.Timestamp).Exec()
 
 	if err != nil {
 		println(err.Error())
@@ -220,7 +224,7 @@ func getPromize(bank string, id string) (*Promize, error) {
 
 	m := map[string]interface{}{}
 	q := `
-        SELECT bank, id, amount, blob, origin_zaddress, origin_bank, origin_account
+        SELECT bank, id, amount, blob
         FROM promizes
             WHERE bank = ?
             AND id = ?
@@ -233,9 +237,6 @@ func getPromize(bank string, id string) (*Promize, error) {
 		promize.Id = m["id"].(gocql.UUID)
 		promize.Amount = m["amount"].(string)
 		promize.Blob = m["blob"].(string)
-		promize.OriginZaddress = m["origin_zaddress"].(string)
-		promize.OriginBank = m["origin_bank"].(string)
-		promize.OriginAccount = m["origin_account"].(string)
 
 		return promize, nil
 	}
@@ -252,9 +253,10 @@ func createUser(user *User) error {
 			public_key,
             salt,
             verified,
-			active
+			active,
+			timestamp
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `
 	err := Session.Query(q,
 		user.Zaddress,
@@ -263,7 +265,8 @@ func createUser(user *User) error {
 		user.PublicKey,
 		user.Salt,
 		user.Verified,
-		user.Active).Exec()
+		user.Active,
+		user.Timestamp).Exec()
 
 	if err != nil {
 		println(err.Error())
