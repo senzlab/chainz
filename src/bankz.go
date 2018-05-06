@@ -21,6 +21,68 @@ type FundTrans struct {
 	Date       string
 }
 
+type AccInq struct {
+	Account string
+}
+
+func doAccVerify(acc string) error {
+	client := &http.Client{}
+
+	// request with xml soap data
+	reqXml, err := verifyAccReq(acc)
+	if err != nil {
+		println(err.Error)
+		return err
+	}
+	println(transConfig.api)
+	println(reqXml)
+
+	// TODO remove this
+	return nil
+
+	req, err := http.NewRequest("POST", transConfig.api, bytes.NewBuffer([]byte(reqXml)))
+	if err != nil {
+		println("error create request")
+		println(err.Error)
+		return err
+	}
+
+	// headers
+	req.Header.Add("Content-Type", "text/xml; charset=UTF-8")
+	req.Header.Add("Accept", "text/xml")
+
+	// send request
+	resp, err := client.Do(req)
+	if err != nil {
+		println("error call request")
+		println(err.Error)
+		return err
+	}
+	defer resp.Body.Close()
+
+	println(resp.StatusCode)
+	if resp.StatusCode != 200 {
+		println("invalid response")
+		return errors.New("Invalid response")
+	}
+
+	// parse response and take account hold status
+	resXml, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		println(err.Error)
+		return err
+	}
+	resStr := string(resXml)
+	println(resStr)
+
+	if strings.Contains(resStr, "<ModeOfOperation>SNG") || strings.Contains(resStr, "<ModeOfOperation>ANY") {
+		// inq done
+		return nil
+	}
+
+	return errors.New("Invalid account")
+}
+
 func doFundTrans(fromAcc string, toAcc string, amount string, commission string, memo string) error {
 	client := &http.Client{}
 
@@ -103,6 +165,34 @@ func fundTransReq(fromAcc string, toAcc string, amount string, commission string
 	// parse template
 	var buf bytes.Buffer
 	err = t.Execute(&buf, ft)
+	if err != nil {
+		println(err.Error())
+		return "", err
+	}
+
+	return buf.String(), nil
+}
+
+func verifyAccReq(acc string) (string, error) {
+	// format template path
+	cwd, _ := os.Getwd()
+	tp := filepath.Join(cwd, "./template/accinq.xml")
+	println(tp)
+
+	// template from file
+	t, err := template.ParseFiles(tp)
+	if err != nil {
+		println(err.Error())
+		return "", err
+	}
+
+	// trans params
+	inq := AccInq{}
+	inq.Account = acc
+
+	// parse template
+	var buf bytes.Buffer
+	err = t.Execute(&buf, inq)
 	if err != nil {
 		println(err.Error())
 		return "", err

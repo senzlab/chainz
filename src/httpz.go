@@ -236,11 +236,17 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// first verify account
+		err = doAccVerify(acc)
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
+		}
+
 		// add account
 		// generate salt amount
-		salt := randomSalt()
-
 		// memo is registration
+		salt := randomSalt()
 		memo := "iGift account verification"
 
 		// transaction

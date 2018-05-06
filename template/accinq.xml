@@ -1,0 +1,12 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:iib="http://www.sampath.lk/SD/IIBFinacleIntegration/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <iib:GetGenInqRequest>
+         <APPCode>GFT</APPCode>
+         <Controller>CMN</Controller>
+         <CDCICode>C</CDCICode>
+         <AccountNo>{{.Account}}</AccountNo>
+         <SolID></SolID>
+      </iib:GetGenInqRequest>
+   </soapenv:Body>
+</soapenv:Envelope>
