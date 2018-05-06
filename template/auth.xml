@@ -1,9 +1,0 @@
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:mob="http://mobileServices.web.app.sampath.org">
-   <soapenv:Header/>
-   <soapenv:Body>
-      <mob:doLogin>
-          <mob:userId>{{.Username}}</mob:userId>
-          <mob:password>{{.Password}}</mob:password>
-      </mob:doLogin>
-   </soapenv:Body>
-</soapenv:Envelope>
