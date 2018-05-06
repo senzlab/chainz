@@ -14,6 +14,7 @@ ENV SENZIE_NAME sampath
 ENV SENZIE_MODE DEV
 ENV CASSANDRA_HOST dev.localhost
 ENV CASSANDRA_PORT 9042
+ENV CASSANDRA_KEYSPACE zchain
 
 # fincale config
 ENV FINACLE_API https://fin10env1.sampath.lk:15250/fiwebservice/FIWebService

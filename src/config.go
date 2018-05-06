@@ -43,7 +43,7 @@ var config = Config{
 var cassandraConfig = CassandraConfig{
 	host:        getEnv("CASSANDRA_HOST", "dev.localhost"),
 	port:        getEnv("CASSANDRA_PORT", "9042"),
-	keyspace:    getEnv("CASSANDRA_KEYSPACE", "cchain"),
+	keyspace:    getEnv("CASSANDRA_KEYSPACE", "zchain"),
 	consistancy: getEnv("CASSANDRA_CONSISTANCY", "ALL"),
 }
 
