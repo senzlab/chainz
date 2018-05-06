@@ -10,6 +10,16 @@ import (
 	"strings"
 )
 
+type Senz struct {
+	Msg      string
+	Uid      string
+	Ztype    string
+	Sender   string
+	Receiver string
+	Attr     map[string]string
+	Digsig   string
+}
+
 type SenzMsg struct {
 	Uid string
 	Msg string
