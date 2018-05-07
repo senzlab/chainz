@@ -25,7 +25,7 @@ type AccInq struct {
 	Account string
 }
 
-func doAccVerify(acc string) error {
+func doAccVerify(acc string, statusVerify bool) error {
 	client := &http.Client{}
 
 	// request with xml soap data
@@ -38,7 +38,7 @@ func doAccVerify(acc string) error {
 	println(reqXml)
 
 	// TODO remove this
-	return nil
+	//return nil
 
 	req, err := http.NewRequest("POST", transConfig.api, bytes.NewBuffer([]byte(reqXml)))
 	if err != nil {
@@ -75,9 +75,16 @@ func doAccVerify(acc string) error {
 	resStr := string(resXml)
 	println(resStr)
 
-	if strings.Contains(resStr, "<ModeOfOperation>SNG") || strings.Contains(resStr, "<ModeOfOperation>ANY") {
-		// inq done
-		return nil
+	if strings.Contains(resStr, "<AcctStatus>A") {
+		// account active
+		if statusVerify {
+			return nil
+		} else {
+			if strings.Contains(resStr, "<ModeOfOperation>SNG") || strings.Contains(resStr, "<ModeOfOperation>ANY") {
+				// inq done
+				return nil
+			}
+		}
 	}
 
 	return errors.New("Invalid account")
@@ -96,7 +103,7 @@ func doFundTrans(fromAcc string, toAcc string, amount string, commission string,
 	println(reqXml)
 
 	// TODO remove this
-	return nil
+	//return nil
 
 	req, err := http.NewRequest("POST", transConfig.api, bytes.NewBuffer([]byte(reqXml)))
 	if err != nil {
