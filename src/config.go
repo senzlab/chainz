@@ -23,10 +23,13 @@ type CassandraConfig struct {
 }
 
 type TransConfig struct {
-	api        string
-	action     string
-	commission string
-	account    string
+	api               string
+	action            string
+	commission        string
+	commissionAccount string
+	account           string
+	bankCode          string
+	ceftCommission    string
 }
 
 var config = Config{
@@ -48,10 +51,13 @@ var cassandraConfig = CassandraConfig{
 }
 
 var transConfig = TransConfig{
-	api:        getEnv("TRANS_API", "http://192.168.125.93:7800/sd/iib/IIBFinacleIntegration"),
-	action:     getEnv("TRANS_ACTION", "http://192.168.125.93:7800/sd/iib/iibfinacleintegration"),
-	commission: getEnv("TRANS_COMMISSION", "20"),
-	account:    getEnv("TRANS_ACCOUNT", "900100000801"),
+	api:               getEnv("TRANS_API", "http://192.168.125.93:7800/sd/iib/IIBFinacleIntegration"),
+	action:            getEnv("TRANS_ACTION", "http://192.168.125.93:7800/sd/iib/iibfinacleintegration"),
+	commission:        getEnv("TRANS_COMMISSION", "20"),
+	commissionAccount: getEnv("COMMISSION_ACCOUNT", "900108020041"),
+	account:           getEnv("TRANS_ACCOUNT", "900100000801"),
+	bankCode:          getEnv("TRANS_BANK_CODE", "7278"),
+	ceftCommission:    getEnv("CEFT_COMMISSION", "50"),
 }
 
 func getEnv(key, fallback string) string {

@@ -152,18 +152,31 @@ func promizes(w http.ResponseWriter, r *http.Request) {
 		trans.ToAccount = senz.Attr["acc"]
 		trans.Type = "REDEEM"
 
-		// verify acc
-		err = doAccVerify(trans.ToAccount, true)
-		if err != nil {
-			errorResponse(w, senz.Attr["uid"], senz.Sender)
-			return
-		}
+		// check for ceft
+		bankCode := senz.Attr["bnkcode"]
+		println(bankCode)
+		if bankCode == transConfig.bankCode {
+			// verify acc
+			err = doAccVerify(trans.ToAccount, true)
+			if err != nil {
+				errorResponse(w, senz.Attr["uid"], senz.Sender)
+				return
+			}
 
-		// call finacle to fund transfer
-		err = doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, "", id)
-		if err != nil {
-			errorResponse(w, senz.Attr["uid"], senz.Sender)
-			return
+			// call finacle to fund transfer
+			err = doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, "", id)
+			if err != nil {
+				errorResponse(w, senz.Attr["uid"], senz.Sender)
+				return
+			}
+		} else {
+			// this is ceft
+			println("going ceft...")
+			err = doCeftTrans(trans.ToAccount, bankCode, trans.PromizeAmount, id)
+			if err != nil {
+				errorResponse(w, senz.Attr["uid"], senz.Sender)
+				return
+			}
 		}
 
 		// create trans

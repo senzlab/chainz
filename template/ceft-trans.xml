@@ -12,39 +12,39 @@
          <TerminalID></TerminalID>
          <!--Optional:-->
          <CardNo></CardNo>
-         <FromAccNo>900100000801</FromAccNo>
+         <FromAccNo>{{.FromAcc}}</FromAccNo>
          <!--Optional:-->
          <FromAccType></FromAccType>
          <!--Optional:-->
-         <FromAccBankCode>7278</FromAccBankCode>
+         <FromAccBankCode>{{.FromBankCode}}</FromAccBankCode>
          <!--Optional:-->
          <FromAccBranchCode></FromAccBranchCode>
-         <ToAccNo>100178099707</ToAccNo>
+         <ToAccNo>{{.ToAcc}}</ToAccNo>
          <!--Optional:-->
-         <ToAccName>Lakshan</ToAccName>
+         <ToAccName></ToAccName>
          <!--Optional:-->
          <ToAccType></ToAccType>
-         <ToAccBankCode>7719</ToAccBankCode>
+         <ToAccBankCode>{{.ToBankCode}}</ToAccBankCode>
          <!--Optional:-->
          <ToAccBranchCode></ToAccBranchCode>
-         <TxnAmount>555</TxnAmount>
-         <CommAmount>15</CommAmount>
+         <TxnAmount>{{.Amount}}</TxnAmount>
+         <CommAmount>{{.Commission}}</CommAmount>
          <!--Optional:-->
-         <CommAccount>900108020041</CommAccount>
+         <CommAccount>{{.CommissionAcc}}</CommAccount>
          <!--Optional:-->
          <TranRemarks></TranRemarks>
          <!--Optional:-->
-         <ValueDate>05/04/2018</ValueDate>
+         <ValueDate>{{.Date}}</ValueDate>
          <!--Optional:-->
          <SlipsCode></SlipsCode>
          <!--Optional:-->
-         <DrCurrencyCode></DrCurrencyCode>
+         <DrCurrencyCode>LKR</DrCurrencyCode>
          <!--Optional:-->
          <ChannelType></ChannelType>
          <CEFTFlag>Y</CEFTFlag>
          <FromAccName></FromAccName>
          <!--Optional:-->
-         <Reference></Reference>
+         <Reference>{{.Memo}}</Reference>
       </iib:DoInterBankTransferRequest>
    </soapenv:Body>
 </soapenv:Envelope>
