@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
+	"encoding/asn1"
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
@@ -194,16 +195,27 @@ func getSenzieRsa(keyStr string) *rsa.PrivateKey {
 
 func getSenzieRsaPub(keyStr string) *rsa.PublicKey {
 	// key is base64 encoded
-	data, e1 := base64.StdEncoding.DecodeString(keyStr)
-	if e1 != nil {
-		println(e1.Error())
+	data, err := base64.StdEncoding.DecodeString(keyStr)
+	if err != nil {
+		println(err.Error())
 		return nil
 	}
 
+	// this for ios key
+	var pubKey rsa.PublicKey
+	if rest, err := asn1.Unmarshal(data, &pubKey); err != nil {
+		println("fail to parse ios key")
+	} else if len(rest) != 0 {
+		println("fail to parse ios key, lenght")
+	} else {
+		return &pubKey
+	}
+
+	// this is for android
 	// get rsa public key
-	pub, e2 := x509.ParsePKIXPublicKey(data)
-	if e2 != nil {
-		println(e2.Error())
+	pub, err := x509.ParsePKIXPublicKey(data)
+	if err != nil {
+		println(err.Error())
 		return nil
 	}
 	switch pub := pub.(type) {
@@ -212,6 +224,8 @@ func getSenzieRsaPub(keyStr string) *rsa.PublicKey {
 	default:
 		return nil
 	}
+
+	return nil
 }
 
 func sign(payload string, key *rsa.PrivateKey) (string, error) {

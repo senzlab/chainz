@@ -41,7 +41,7 @@ func doAccVerify(acc string, statusVerify bool) error {
 	println(reqXml)
 
 	// TODO remove this
-	//return nil
+	return nil
 
 	req, err := http.NewRequest("POST", transConfig.api, bytes.NewBuffer([]byte(reqXml)))
 	if err != nil {
@@ -106,7 +106,7 @@ func doFundTrans(fromAcc string, toAcc string, amount string, commission string,
 	println(reqXml)
 
 	// TODO remove this
-	//return nil
+	return nil
 
 	req, err := http.NewRequest("POST", transConfig.api, bytes.NewBuffer([]byte(reqXml)))
 	if err != nil {
@@ -163,7 +163,7 @@ func doCeftTrans(toAcc string, bankCode string, amount string, memo string) erro
 	println(reqXml)
 
 	// TODO remove this
-	//return nil
+	return nil
 
 	req, err := http.NewRequest("POST", transConfig.api, bytes.NewBuffer([]byte(reqXml)))
 	if err != nil {

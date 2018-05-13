@@ -355,7 +355,7 @@ func errorResponse(w http.ResponseWriter, uid string, to string) {
 
 func successResponse(w http.ResponseWriter, zmsgs []SenzMsg) {
 	j, _ := json.Marshal(zmsgs)
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	io.WriteString(w, string(j))
 }
