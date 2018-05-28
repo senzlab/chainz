@@ -219,10 +219,12 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// todo generate verification code
+		// new user
+		user := senzToUser(&senz)
+		zode := zode()
+		user.Zode = zode
 
 		// create user
-		user := senzToUser(&senz)
 		// todo check user already exists
 		err = createUser(user)
 		if err != nil {
@@ -235,7 +237,7 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 		// success response
 		zmsg := SenzMsg{
 			Uid: senz.Attr["uid"],
-			Msg: statusSenz("SUCCESS", senz.Attr["uid"], senz.Sender),
+			Msg: zodeSenz("SUCCESS", zode, senz.Attr["uid"], senz.Sender),
 		}
 		var zmsgs []SenzMsg
 		zmsgs = append(zmsgs, zmsg)

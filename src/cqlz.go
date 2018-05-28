@@ -258,7 +258,7 @@ func createUser(user *User) error {
 			active,
 			timestamp
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
 	err := Session.Query(q,
 		user.Zaddress,

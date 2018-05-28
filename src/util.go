@@ -85,6 +85,16 @@ func randomSalt() string {
 	return fmt.Sprintf("%d.%d%d", x, y, z)
 }
 
+func zode() string {
+	l := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	b := make([]rune, 6)
+	for i := range b {
+		b[i] = l[rand.Intn(len(l))]
+	}
+
+	return string(b)
+}
+
 func senzToPromize(senz *Senz) *Promize {
 	promize := &Promize{}
 	promize.Bank = config.senzieName
@@ -149,6 +159,17 @@ func awaSenz(uid string) string {
 
 func statusSenz(status string, uid string, to string) string {
 	z := "DATA #status " + status +
+		" #uid " + uid +
+		" @" + to +
+		" ^" + config.senzieName
+	s, _ := sign(z, getIdRsa())
+
+	return z + " " + s
+}
+
+func zodeSenz(status string, zode string, uid string, to string) string {
+	z := "DATA #status " + status +
+		" #zode " + zode +
 		" #uid " + uid +
 		" @" + to +
 		" ^" + config.senzieName
