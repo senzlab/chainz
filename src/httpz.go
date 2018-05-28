@@ -219,13 +219,18 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// todo generate verification code
+
 		// create user
 		user := senzToUser(&senz)
+		// todo check user already exists
 		err = createUser(user)
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return
 		}
+
+		// todo send response with verification code
 
 		// success response
 		zmsg := SenzMsg{
@@ -238,6 +243,45 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 		// success response back
 		successResponse(w, zmsgs)
 		return
+	}
+
+	if zode, ok := senz.Attr["zode"]; ok {
+		// user shoule be here
+		user, err := getUser(senz.Sender)
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
+		}
+
+		// verify signature
+		payload := strings.Replace(senz.Msg, senz.Digsig, "", -1)
+		err = verify(payload, senz.Digsig, getSenzieRsaPub(user.PublicKey))
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
+		}
+
+		// check user verification code with recived code
+		if zode != user.Zode {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
+		}
+
+		// activate user
+		setUserActive(true, senz.Sender)
+
+		// return success response
+		zmsg := SenzMsg{
+			Uid: senz.Attr["uid"],
+			Msg: statusSenz("SUCCESS", senz.Attr["uid"], senz.Sender),
+		}
+		var zmsgs []SenzMsg
+		zmsgs = append(zmsgs, zmsg)
+
+		// success response back
+		successResponse(w, zmsgs)
+		return
+
 	}
 
 	if acc, ok := senz.Attr["acc"]; ok {

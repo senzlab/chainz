@@ -44,6 +44,7 @@ type User struct {
 	Salt      string // random debit amount
 	PublicKey string
 	Verified  bool
+	Zode      string
 	Active    bool
 	Timestamp int64
 }
@@ -253,6 +254,7 @@ func createUser(user *User) error {
 			public_key,
             salt,
             verified,
+			zode,
 			active,
 			timestamp
         )
@@ -265,6 +267,7 @@ func createUser(user *User) error {
 		user.PublicKey,
 		user.Salt,
 		user.Verified,
+		user.Zode,
 		user.Active,
 		user.Timestamp).Exec()
 
@@ -278,7 +281,7 @@ func createUser(user *User) error {
 func getUser(zaddress string) (*User, error) {
 	m := map[string]interface{}{}
 	q := `
-        SELECT account, salt, public_key, verified, active
+        SELECT account, salt, public_key, verified, zode, active
         FROM users
         WHERE zaddress = ?
         LIMIT 1
@@ -291,27 +294,13 @@ func getUser(zaddress string) (*User, error) {
 		user.Salt = m["salt"].(string)
 		user.PublicKey = m["public_key"].(string)
 		user.Verified = m["verified"].(bool)
+		user.Zode = m["zode"].(string)
 		user.Active = m["active"].(bool)
 
 		return user, nil
 	}
 
 	return nil, errors.New("Not found promize")
-}
-
-func setUserVerified(verified bool, zaddress string) error {
-	q := `
-		UPDATE users 
-			SET verified = ? 
-        WHERE zaddress = ?
-        `
-	err := Session.Query(q, verified, zaddress).Exec()
-	if err != nil {
-		println(err.Error())
-		return err
-	}
-
-	return nil
 }
 
 func setUserSalt(salt string, zaddress string) error {
@@ -336,6 +325,36 @@ func setUserAccount(account string, zaddress string) error {
         WHERE zaddress = ?
         `
 	err := Session.Query(q, account, zaddress).Exec()
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func setUserVerified(verified bool, zaddress string) error {
+	q := `
+		UPDATE users 
+			SET verified = ? 
+        WHERE zaddress = ?
+        `
+	err := Session.Query(q, verified, zaddress).Exec()
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func setUserActive(active bool, zaddress string) error {
+	q := `
+		UPDATE users 
+			SET active = ? 
+        WHERE zaddress = ?
+        `
+	err := Session.Query(q, active, zaddress).Exec()
 	if err != nil {
 		println(err.Error())
 		return err
