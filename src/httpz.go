@@ -231,13 +231,6 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// send sms with verification code
-		err = send(zode, senz.Sender)
-		if err != nil {
-			errorResponse(w, senz.Attr["uid"], senz.Sender)
-			return
-		}
-
 		// success response
 		zmsg := SenzMsg{
 			Uid: senz.Attr["uid"],
