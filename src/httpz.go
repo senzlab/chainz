@@ -225,14 +225,18 @@ func uzers(w http.ResponseWriter, r *http.Request) {
 		user.Zode = zode
 
 		// create user
-		// todo check user already exists
 		err = createUser(user)
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return
 		}
 
-		// todo send response with verification code
+		// send sms with verification code
+		err = send(zode, senz.Sender)
+		if err != nil {
+			errorResponse(w, senz.Attr["uid"], senz.Sender)
+			return
+		}
 
 		// success response
 		zmsg := SenzMsg{

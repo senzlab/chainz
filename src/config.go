@@ -32,6 +32,12 @@ type TransConfig struct {
 	ceftCommission    string
 }
 
+type SmzConfig struct {
+	appcode  string
+	password string
+	api      string
+}
+
 var config = Config{
 	switchName: getEnv("SWITCH_NAME", "senzswitch"),
 	switchHost: getEnv("SWITCH_HOST", "www.rahasak.com"),
@@ -58,6 +64,12 @@ var transConfig = TransConfig{
 	account:           getEnv("TRANS_ACCOUNT", "900100000801"),
 	bankCode:          getEnv("TRANS_BANK_CODE", "7278"),
 	ceftCommission:    getEnv("CEFT_COMMISSION", "50"),
+}
+
+var smzConfig = SmzConfig{
+	appcode:  getEnv("SMZ_APPCODE", "IGIFT"),
+	password: getEnv("SMZ_PASSWORD", "476d5ffbe2bb46196cc9a58ef8aec1bd"),
+	api:      getEnv("SMZ_API", "http://192.125.125.143:7005/SMSSolution_V1.02/SampathSMS/special"),
 }
 
 func getEnv(key, fallback string) string {
