@@ -103,7 +103,7 @@ func promizes(w http.ResponseWriter, r *http.Request) {
 		trans.Type = "TRANSFER"
 
 		// call finacle to fund transfer
-		err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, transConfig.commission, promize.Id.String())
+		err := doFundTrans(trans.FromAccount, trans.ToAccount, trans.PromizeAmount, commission(trans.PromizeAmount), promize.Id.String())
 		if err != nil {
 			errorResponse(w, senz.Attr["uid"], senz.Sender)
 			return

@@ -85,6 +85,19 @@ func randomSalt() string {
 	return fmt.Sprintf("%d.%d%d", x, y, z)
 }
 
+func commission(amount string) string {
+	amnt, err := strconv.Atoi(amount)
+	if err != nil {
+		return ""
+	}
+
+	if amnt > 5000 {
+		return "50"
+	} else {
+		return "20"
+	}
+}
+
 func zode() string {
 	l := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	b := make([]rune, 6)
