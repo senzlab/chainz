@@ -92,9 +92,11 @@ func commission(amount string) string {
 	}
 
 	if amnt > 5000 {
+		// 50
 		return "50"
 	} else {
-		return "20"
+		// 20
+		return transConfig.commission
 	}
 }
 
